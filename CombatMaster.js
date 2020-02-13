@@ -50,7 +50,8 @@ var CombatMaster = CombatMaster || (function() {
         addImage = '&',		
         doneImage = '3',
         showImage = 'v',
-        delayImage = '}';
+        delayImage = '}',
+        sortConditionsImage = '0';
     //Styling for the chat responses.
     const styles = {
         reset: 'padding: 0; margin: 0;',
@@ -223,15 +224,16 @@ var CombatMaster = CombatMaster || (function() {
             }  
             if (cmdDetails.details.sort) {
                 sortTurnorder();
-            }                   
+            }    
         }
         if (cmdDetails.action == 'show'){
             if (cmdDetails.details.all) {
-                editFavoriteState('All');
+                editFavoriteState('all');
             }    
             if (cmdDetails.details.favorites) {
-                editFavoriteState('Favorites');
+                editFavoriteState('favorites');
             } 
+    
             if (cmdDetails.details.setup) {
                 sendConfigMenu();
             }    
@@ -306,117 +308,6 @@ var CombatMaster = CombatMaster || (function() {
 			sendMainMenu(who)
         }
 	},
-//         if (command === state[combatState].config.command) {
-// 			if (action === 'next') {
-// 				if (!getTurnorder().length) return;
-				
-// 				NextTurn();
-// 				return;
-// 			}
-// 			if (action === 'delay') {
-// 				if (!getTurnorder().length) return;
-
-// 				delayTurn();
-// 				return
-// 			}
-			
-// // 			// Below commands are only for GM's
-// 			if (!playerIsGM(msg.playerid)) return;
-
-//             switch (action) {
-// 				case 'reset':
-// 						state[combatState] = {};
-// 						state[statusState] = {};
-// 						setDefaults(true);
-// 						sendConfigMenu();
-// 				break;
-// 				case 'config':
-// 					editCombatState(condition,key,value)              
-// 				break;
-// 				case 'tracker':
-// 					sendConfigMenu();
-// 				break;				
-// 				case 'sort':
-// 					sortTurnorder();
-// 				break;
-// 				case 'prev':
-// 					PrevTurn();
-// 				break;
-// 				case 'start':
-// 					startCombat(msg.selected);
-// 				break;
-// 				case 'stop':
-// 					stopCombat();
-// 					sendMainMenu();
-// 				break;
-// 				case 'st':
-// 					stopTimer();
-// 					sendMainMenu();
-// 				break;
-// 				case 'pt':
-// 					pauseTimer();
-// 					sendMainMenu();
-// 				break;
-// 				case 'all':
-// 					editFavoriteState('All');
-// 					sendMainMenu();
-// 				break;	
-// 				case 'fav':
-// 					editFavoriteState('Favorites');
-// 					sendMainMenu();
-// 				break;						
-// 				case 'add':
-// 				    addCommand(msg.selected, condition, duration, direction)
-// 				break;    
-// 				case 'remove': {
-// 					removeCommand(msg.selected, condition)
-// 				}
-// 				break;
-//                 case 'show': {
-//                     showConditions(msg.selected, (args.shift() === 'p'));
-//     			}
-//                 break;				
-// 				default:
-// 					sendMainMenu();
-// 				break;
-// 			}
-// 		}	
-		
-//         if (command === state[statusState].config.command) {
-//             switch(action) {
-//                 case 'import':
-//                     importConditions(msg)
-//                 break;
-//                 case 'export':
-//                     exportConditions()
-//                 break;                
-//                 case 'status':
-//                     sendStatusMenu(key, value)
-//                 break;
-//                 case 'list':
-//                     sendConditionsMenu()
-//                 break;      
-//                 case 'config':
-//                     editStatusState(key, value)
-//                 break;  
-//                 case 'condition':
-//                     sendConditionMenu(condition)
-//                 break;    
-//                 case 'update':
-//                     editCondition(condition, key, value)
-//                 break;
-//                 case 'add':
-//                     createCondition(condition)
-//                 break;                
-//                 case 'remove':
-//                     deleteCondition(condition, duration)
-//                 break;
-//                 case 'favorite':
-//                     editFavoriteConditon(condition, key, value)
-//                 break;   
-//             }
-//         }		
-//     },
 
 //*************************************************************************************************************
 //MENUS
@@ -435,26 +326,30 @@ var CombatMaster = CombatMaster || (function() {
             sortButton          = makeImageButton('!cm --turn,sort',sortImage,'Sort Turnorder','transparent',18),
             listItems           = [],
             titleText           = 'CombatMaster Menu<span style="' + styles.version + '"> (' + version + ')</span>',
-            contents, key, condition, conditionButton, addButton, removeButton, favoriteButton, listContents, rowCount=1;
+            contents, key, condition, conditions, conditionButton, addButton, removeButton, favoriteButton, listContents, rowCount=1;
 
         if (debug) {
             log('Send Main Menu')
         }
-        
+
         if (inFight() ) {
-            contents = '<div style="background-color:green;width:100%;padding:2px;vertical-align:middle">'+stopButton + prevButton + nextButton + pauseTimerButton + stopTimerButton + showButton + sortButton
+            contents = '<div style="background-color:green;width:100%;padding:2px;vertical-align:middle">'+stopButton + prevButton + nextButton + pauseTimerButton + stopTimerButton + showButton + sortButton 
         } else {
-            contents = '<div style="background-color:red">'+startButton 
-            if (state[combatState].config.status.showConditions == 'Favorites'){
-                contents += allConditionsButton
-            } else {
-                contents += favoritesButton
-            } 
+            contents = '<div style="background-color:red">'+startButton
+        }
+        
+        if (['favorites',null].includes(state[combatState].config.status.showConditions)){
+            contents += allConditionsButton
+        } else {
+            contents += favoritesButton
         } 
+
         contents += configButton
         contents += '</div>'
         
-        for (key in state[combatState].config.conditions) {
+        conditions = sortObject(state[combatState].config.conditions)
+        
+        for (key in conditions) {
             condition       = getConditionByKey(key)
             conditionButton = makeImageButton('!cm --show,condition='+key,backImage,'Edit Condition','transparent',12)
             removeButton    = makeImageButton('!cm --remove,condition='+key,deleteImage,'Remove Condition','transparent',12)
@@ -495,13 +390,15 @@ var CombatMaster = CombatMaster || (function() {
             }
             listContents += '</div>'
             
-            if (state[combatState].config.status.showConditions == 'Favorites' && condition.favorite) {
-                listItems.push(listContents);
+            if (state[combatState].config.status.showConditions == 'favorites') {
+                if (condition.favorite) {
+                    listItems.push(listContents);
+                }    
             } else {
                 listItems.push(listContents);
             }
         }
-        
+
         //send menu 
         state[combatState].config.previousPage = 'main'
         if (who == 'gm') {
@@ -511,6 +408,13 @@ var CombatMaster = CombatMaster || (function() {
         }    
     },
     
+    sortObject = function (obj) {
+        return Object.keys(obj).sort().reduce(function (result, key) {
+            result[key] = obj[key];
+            return result;
+        }, {});
+    },    
+
     sendConfigMenu = function() {
 		let configIntiativeButton       = makeBigButton('Initiative', '!cm --show,initiative'),
 	     	configTurnorderButton       = makeBigButton('Turnorder', '!cm --show,turnorder'),
@@ -1109,6 +1013,11 @@ var CombatMaster = CombatMaster || (function() {
         })
         return false;
     },    
+    
+	editFavoriteState = function (value) {
+		state[combatState].config.status.showConditions = value;
+	},  
+
 //*************************************************************************************************************
 //START/STOP COMBAT
 //*************************************************************************************************************	
@@ -2159,7 +2068,7 @@ var CombatMaster = CombatMaster || (function() {
             log('Roll20AM:'+roll20am)
         }    
         
-        tokenObj     = getObj('graphic',turn.id);
+        tokenObj     = getObj('graphic',tokenObj.id);
         characterObj = getObj('character',tokenObj.get('represents'));
 
         if (characterObj) {
@@ -2209,7 +2118,7 @@ var CombatMaster = CombatMaster || (function() {
             log('Roll20AM:'+roll20am)
         }    
         
-        tokenObj     = getObj('graphic',turn.id);
+        tokenObj     = getObj('graphic',tokenObj.id);
         characterObj = getObj('character',tokenObj.get('represents'));
 
         if (characterObj) {
@@ -2259,7 +2168,7 @@ var CombatMaster = CombatMaster || (function() {
             log('Roll20AM:'+roll20am)
         }    
         
-        tokenObj     = getObj('graphic',turn.id);
+        tokenObj     = getObj('graphic',tokenObj.id);
         characterObj = getObj('character',tokenObj.get('represents'));
 
         if (characterObj) {
@@ -2568,6 +2477,7 @@ var CombatMaster = CombatMaster || (function() {
 					sendOnlyToGM: false,
 					sendConditions: true,
 					clearConditions: false,
+					showConditions: 'all',
 					useMessage: false,
 				},	
 			    conditions: {
@@ -3041,6 +2951,9 @@ var CombatMaster = CombatMaster || (function() {
 				if(!state[combatState].config.status.hasOwnProperty('useMessage')){
 					state[combatState].config.status.useMessage = combatDefaults.config.status.useMessage;
 				}
+				if(!state[combatState].config.status.hasOwnProperty('showConditions')){
+					state[combatState].config.status.showConditions = combatDefaults.config.status.showConditions;
+				}				
             }
         }
         
