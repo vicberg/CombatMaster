@@ -2034,9 +2034,9 @@ var CombatMaster = CombatMaster || (function() {
         });
     },
  
-    doRoundCalls = function (tokenObj) {
+    doRoundCalls = function (token) {
         let turnConfig = state[combatState].config.turnorder, 
-            characterObj, macroObj, action, macro, api, roll20am, type
+            characterObj, macroObj, action, macro, api, roll20am, type, tokenObj
 
         if (debug) {
             log("doRoundCalls")
@@ -2068,7 +2068,7 @@ var CombatMaster = CombatMaster || (function() {
             log('Roll20AM:'+roll20am)
         }    
         
-        tokenObj     = getObj('graphic',tokenObj.id);
+        tokenObj     = getObj('graphic',token._id);
         characterObj = getObj('character',tokenObj.get('represents'));
 
         if (characterObj) {
@@ -2084,14 +2084,14 @@ var CombatMaster = CombatMaster || (function() {
         }
     },
  
-    doAddConditionCalls = function (tokenObj,key) {
+    doAddConditionCalls = function (token,key) {
         let condition = state[combatState].config.conditions[key], 
-            characterObj, macroObj, action, macro, api, roll20am, type
+            characterObj, macroObj, action, macro, api, roll20am, type, tokenObj
 
         if (debug) {
             log("doConditionMacros")
         }
-        
+        log(tokenObj)
         if (!['None',''].includes(condition.addMacro)) {
             macro = condition.addMacro
         }
@@ -2118,7 +2118,7 @@ var CombatMaster = CombatMaster || (function() {
             log('Roll20AM:'+roll20am)
         }    
         
-        tokenObj     = getObj('graphic',tokenObj.id);
+        tokenObj     = getObj('graphic',token._id);
         characterObj = getObj('character',tokenObj.get('represents'));
 
         if (characterObj) {
@@ -2134,9 +2134,9 @@ var CombatMaster = CombatMaster || (function() {
         }
     },
   
-    doRemoveConditionCalls = function (tokenObj,key) {
+    doRemoveConditionCalls = function (token,key) {
         let condition = state[combatState].config.conditions[key], 
-            characterObj, macroObj, action, macro, api, roll20am, type
+            characterObj, macroObj, action, macro, api, roll20am, type, tokenObj
 
         if (debug) {
             log("doConditionMacros")
@@ -2168,7 +2168,7 @@ var CombatMaster = CombatMaster || (function() {
             log('Roll20AM:'+roll20am)
         }    
         
-        tokenObj     = getObj('graphic',tokenObj.id);
+        tokenObj     = getObj('graphic',token._id);
         characterObj = getObj('character',tokenObj.get('represents'));
 
         if (characterObj) {
