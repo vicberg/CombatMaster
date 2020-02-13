@@ -2163,7 +2163,7 @@ var CombatMaster = CombatMaster || (function() {
         characterObj = getObj('character',tokenObj.get('represents'));
 
         if (characterObj) {
-            if (action)
+            if (action) {
                 sendCalltoChat(tokenObj,characterObj,action)
             }
             if (api) {
@@ -2175,7 +2175,7 @@ var CombatMaster = CombatMaster || (function() {
         }
     },
  
-     doAddConditionCalls = function (tokenObj,key) {
+    doAddConditionCalls = function (tokenObj,key) {
         let condition = state[combatState].config.conditions[key], 
             characterObj, macroObj, action, macro, api, roll20am, type
 
@@ -2213,7 +2213,7 @@ var CombatMaster = CombatMaster || (function() {
         characterObj = getObj('character',tokenObj.get('represents'));
 
         if (characterObj) {
-            if (action)
+            if (action) {
                 sendCalltoChat(tokenObj,characterObj,action)
             }
             if (api) {
@@ -2225,7 +2225,7 @@ var CombatMaster = CombatMaster || (function() {
         }
     },
   
-     doRemoveConditionCalls = function (tokenObj,key) {
+    doRemoveConditionCalls = function (tokenObj,key) {
         let condition = state[combatState].config.conditions[key], 
             characterObj, macroObj, action, macro, api, roll20am, type
 
@@ -2263,7 +2263,7 @@ var CombatMaster = CombatMaster || (function() {
         characterObj = getObj('character',tokenObj.get('represents'));
 
         if (characterObj) {
-            if (action)
+            if (action) {
                 sendCalltoChat(tokenObj,characterObj,action)
             }
             if (api) {
