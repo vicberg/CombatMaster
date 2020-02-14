@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.0 Beta',
+	    version = '1.2.1 Alpha',
         timerObj,
         intervalHandle,
         debug = true,
@@ -2068,8 +2068,8 @@ var CombatMaster = CombatMaster || (function() {
             log('Roll20AM:'+roll20am)
         }    
         
-        tokenObj     = getObj('graphic',token._id);
-        characterObj = getObj('character',tokenObj.get('represents'));
+        //tokenObj     = getObj('graphic',token.get('_id');
+        characterObj = getObj('character',token.get('represents'));
 
         if (characterObj) {
             if (action) {
