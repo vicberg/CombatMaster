@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.3.2 Alpha',
+	    version = '1.3.3 Alpha',
         timerObj,
         intervalHandle,
         debug = true,
@@ -989,7 +989,7 @@ var CombatMaster = CombatMaster || (function() {
                     icon = libTokenMarkers.getStatus(newCondition.icon).getTag()
                 }                
             } else if (newCondition.iconType == 'Combat Master') {
-                icon = newCondition.iconType
+                icon = newCondition.icon
             }
             
             if (!defaultCondition.override) {
