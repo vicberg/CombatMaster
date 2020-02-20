@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.3 Alpha',
+	    version = '1.3.2 Alpha',
         timerObj,
         intervalHandle,
         debug = true,
@@ -2638,7 +2638,7 @@ var CombatMaster = CombatMaster || (function() {
 					charmed: {
 						name: 'Charmed',
 						key: 'charmed',
-						description: '<p>A charmed creature canÃ¢â‚¬â„¢t Attack the charmer or target the charmer with harmful Abilities or magical effects.</p> <p>The charmer has advantage on any ability check to interact socially with the creature.</p>',
+						description: "<p>A charmed creature can't Attack the charmer or target the charmer with harmful Abilities or magical effects.</p> <p>The charmer has advantage on any ability check to interact socially with the creature.</p>",
 						icon: 'broken-heart',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2658,7 +2658,7 @@ var CombatMaster = CombatMaster || (function() {
 					deafened: {
 						name: 'Deafened',
 						key: 'deafened',
-						description: '<p>A deafened creature canÃ¢â‚¬â„¢t hear and automatically fails any ability check that requires hearing.</p>',
+						description: "<p>A deafened creature can't hear and automatically fails any ability check that requires hearing.</p>",
 						icon: 'edge-crack',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2678,7 +2678,7 @@ var CombatMaster = CombatMaster || (function() {
 					frightened: {
 						name: 'Frightened',
 						key: 'frightened',
-						description: '<p>A frightened creature has disadvantage on Ability Checks and Attack rolls while the source of its fear is within line of sight.</p> <p>The creature canÃ¢â‚¬â„¢t willingly move closer to the source of its fear.</p>',
+						description: "<p>A frightened creature has disadvantage on Ability Checks and Attack rolls while the source of its fear is within line of sight.</p> <p>The creature can't willingly move closer to the source of its fear.</p>",
 						icon: 'screaming',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2698,7 +2698,7 @@ var CombatMaster = CombatMaster || (function() {
 					grappled: {
 						name: 'Grappled',
 						key: 'grappled',
-						description: '<p>A grappled creatureÃ¢â‚¬â„¢s speed becomes 0, and it canÃ¢â‚¬â„¢t benefit from any bonus to its speed.</p> <p>The condition ends if the Grappler is <i>incapacitated</i>.</p> <p>The condition also ends if an effect removes the grappled creature from the reach of the Grappler or Grappling effect, such as when a creature is hurled away by the Thunderwave spell.</p>',
+						description: "<p>A grappled creature's speed becomes 0, and it canÃ¢â‚¬â„¢t benefit from any bonus to its speed.</p> <p>The condition ends if the Grappler is <i>incapacitated</i>.</p> <p>The condition also ends if an effect removes the grappled creature from the reach of the Grappler or Grappling effect, such as when a creature is hurled away by the Thunderwave spell.</p>",
 						icon: 'grab',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2718,7 +2718,7 @@ var CombatMaster = CombatMaster || (function() {
 					incapacitated: {
 						name: 'Incapacitated',
 						key: 'incapacitated',
-						description: '<p>An incapacitated creature canÃ¢â‚¬â„¢t take actions or reactions.</p>',
+						description: "<p>An incapacitated creature can't take actions or reactions.</p>",
 						icon: 'interdiction',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2738,7 +2738,7 @@ var CombatMaster = CombatMaster || (function() {
 					inspiration: {
 						name: 'Inspiration',
 						key: 'inspiration',
-						description: '<p>If you have inspiration, you can expend it when you make an Attack roll, saving throw, or ability check. Spending your inspiration gives you advantage on that roll.</p> <p>Additionally, if you have inspiration, you can reward another player for good roleplaying, clever thinking, or simply doing something exciting in the game. When another player character does something that really contributes to the story in a fun and interesting way, you can give up your inspiration to give that character inspiration.</p>',
+						description: "<p>If you have inspiration, you can expend it when you make an Attack roll, saving throw, or ability check. Spending your inspiration gives you advantage on that roll.</p> <p>Additionally, if you have inspiration, you can reward another player for good roleplaying, clever thinking, or simply doing something exciting in the game. When another player character does something that really contributes to the story in a fun and interesting way, you can give up your inspiration to give that character inspiration.</p>",
 						icon: 'black-flag',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2758,7 +2758,7 @@ var CombatMaster = CombatMaster || (function() {
 					invisibility: {
 						name: 'Invisibility',
 						key: 'invisibility',
-						description: '<p>An invisible creature is impossible to see without the aid of magic or a Special sense. For the purpose of Hiding, the creature is heavily obscured. The creatureÃ¢â‚¬â„¢s location can be detected by any noise it makes or any tracks it leaves.</p> <p>Attack rolls against the creature have disadvantage, and the creatureÃ¢â‚¬â„¢s Attack rolls have advantage.</p>',
+						description: "<p>An invisible creature is impossible to see without the aid of magic or a Special sense. For the purpose of Hiding, the creature is heavily obscured. The creature's location can be detected by any noise it makes or any tracks it leaves.</p> <p>Attack rolls against the creature have disadvantage, and the creature's Attack rolls have advantage.</p>",
 						icon: 'ninja-mask',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2778,7 +2778,7 @@ var CombatMaster = CombatMaster || (function() {
 					paralyzed: {
 						name: 'Paralyzed',
 						key: 'paralyzed',
-						description: '<p>A paralyzed creature is <i>incapacitated</i> and canÃ¢â‚¬â„¢t move or speak.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p> <p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>',
+						description: "<p>A paralyzed creature is <i>incapacitated</i> and can't move or speak.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p> <p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>",
 						icon: 'pummeled',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2798,7 +2798,7 @@ var CombatMaster = CombatMaster || (function() {
 					petrified: {
 						name: 'Petrified',
 						key: 'petrified',
-						description: '<p>A petrified creature is transformed, along with any nonmagical object it is wearing or carrying, into a solid inanimate substance (usually stone). Its weight increases by a factor of ten, and it ceases aging.</p> <p>The creature is <i>incapacitated</i>, canÃ¢â‚¬â„¢t move or speak, and is unaware of its surroundings.</p> <p>Attack rolls against the creature have advantage.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>The creature has Resistance to all damage.</p> <p>The creature is immune to poison and disease, although a poison or disease already in its system is suspended, not neutralized.</p>',
+						description: "<p>A petrified creature is transformed, along with any nonmagical object it is wearing or carrying, into a solid inanimate substance (usually stone). Its weight increases by a factor of ten, and it ceases aging.</p> <p>The creature is <i>incapacitated</i>, can't move or speak, and is unaware of its surroundings.</p> <p>Attack rolls against the creature have advantage.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>The creature has Resistance to all damage.</p> <p>The creature is immune to poison and disease, although a poison or disease already in its system is suspended, not neutralized.</p>",
 						icon: 'frozen-orb',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2838,7 +2838,7 @@ var CombatMaster = CombatMaster || (function() {
 					prone: {
 						name: 'Prone',
 						key: 'prone',
-						description: '<p>A prone creatureÃ¢â‚¬â„¢s only Movement option is to crawl, unless it stands up and thereby ends the condition.</p> <p>The creature has disadvantage on Attack rolls.</p> <p>An Attack roll against the creature has advantage if the attacker is within 5 feet of the creature. Otherwise, the Attack roll has disadvantage.</p>',
+						description: "<p>A prone creature's only Movement option is to crawl, unless it stands up and thereby ends the condition.</p> <p>The creature has disadvantage on Attack rolls.</p> <p>An Attack roll against the creature has advantage if the attacker is within 5 feet of the creature. Otherwise, the Attack roll has disadvantage.</p>",
 						icon: 'back-pain',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2858,7 +2858,7 @@ var CombatMaster = CombatMaster || (function() {
 					restrained: {
 						name: 'Restrained',
 						key: 'restrained',
-						description: '<p>A restrained creatureÃ¢â‚¬â„¢s speed becomes 0, and it canÃ¢â‚¬â„¢t benefit from any bonus to its speed.</p> <p>Attack rolls against the creature have advantage, and the creatureÃ¢â‚¬â„¢s Attack rolls have disadvantage.</p> <p>The creature has disadvantage on Dexterity saving throws.</p>',
+						description: "<p>A restrained creature's speed becomes 0, and it can't benefit from any bonus to its speed.</p> <p>Attack rolls against the creature have advantage, and the creature's Attack rolls have disadvantage.</p> <p>The creature has disadvantage on Dexterity saving throws.</p>",
 						icon: 'fishing-net',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2878,7 +2878,7 @@ var CombatMaster = CombatMaster || (function() {
 					stunned: {
 						name: 'Stunned',
 						key: 'stunned',
-						description: '<p>A stunned creature is <i>incapacitated</i>, canÃ¢â‚¬â„¢t move, and can speak only falteringly.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p>',
+						description: "<p>A stunned creature is <i>incapacitated</i>, can't move, and can speak only falteringly.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p>",
 						icon: 'fist',
 						iconType: 'Combat Master',
 						duration: 1,
@@ -2898,7 +2898,7 @@ var CombatMaster = CombatMaster || (function() {
 					unconscious: {
 						name: 'Unconscious',
 						key: 'unconscious',
-						description: '<p>An unconscious creature is <i>incapacitated</i>, canÃ¢â‚¬â„¢t move or speak, and is unaware of its surroundings.</p> <p>The creature drops whatever itÃ¢â‚¬â„¢s holding and falls prone.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p> <p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>',
+						description: "<p>An unconscious creature is <i>incapacitated</i>, can't move or speak, and is unaware of its surroundings.</p> <p>The creature drops whatever it's holding and falls prone.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p> <p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>",
 						icon: 'sleepy',
 						iconType: 'Combat Master',
 						duration: 1,
