@@ -983,6 +983,15 @@ var CombatMaster = CombatMaster || (function() {
             newCondition.icon       = defaultCondition.icon
             newCondition.iconType   = defaultCondition.iconType
 
+            let icon
+            if (newCondition.iconType == 'Token Marker') {
+                if('undefined' !== typeof libTokenMarkers && libTokenMarkers.getOrderedList){
+                    icon = libTokenMarkers.getStatus(newCondition.icon).getTag()
+                }                
+            } else if (newCondition.iconType == 'Combat Master') {
+                icon = newCondition.iconType
+            }
+            
             if (!defaultCondition.override) {
                 newCondition.duration = parseInt(defaultCondition.duration)
             } else {
@@ -1014,12 +1023,12 @@ var CombatMaster = CombatMaster || (function() {
             state[combatState].conditions.push(newCondition)
 
             if (newCondition.key == 'dead' || newCondition.duration <= 1) {
-                addMarker(tokenObj,newCondition.icon,newCondition.duration)
+                addMarker(tokenObj,icon,newCondition.duration)
             } else {   
                 if (newCondition.duration >= 10) {
-                    addMarker(tokenObj,newCondition.icon,newCondition.duration)
+                    addMarker(tokenObj,icon,newCondition.duration)
                 } else {
-                    addMarker(tokenObj,newCondition.icon,newCondition.duration)
+                    addMarker(tokenObj,icon,newCondition.duration)
                 }
             }  
             
@@ -1077,7 +1086,7 @@ var CombatMaster = CombatMaster || (function() {
         if (initiative.rollInitiative == 'None') {
             turnorder = getTurnorder()
             if (turnorder.length == 0) {
-                makeAndSendMenu('Auto Roll Initiative has been set to false and your turn order is currently empty',' ', whisper);
+                makeAndSendMenu('Auto Roll Initiative has been set to None and your turn order is currently empty',' ', whisper);
                 verified=false
                 return
             }
@@ -1125,10 +1134,13 @@ var CombatMaster = CombatMaster || (function() {
         paused = false;
         Campaign().set('initiativepage', Campaign().get('playerpageid'));
         
+        
         if(initiative.rollInitiative == 'CombatMaster'){
             rollInitiative(selectedTokens, initiative);
         } else if (initiative.rollInitiative == 'Group-Init') {
             rollGroupInit(selectedTokens)
+        } else if (!getTurnorder()) {
+            makeAndSendMenu('You must have a populated turnorder before starting Combat Master','');    
         }
 
         setTimeout(function() {
@@ -1442,7 +1454,7 @@ var CombatMaster = CombatMaster || (function() {
     },
 
     centerToken = function (token) {
-        if(state[combatState].config.centerToken) {
+        if(state[combatState].config.turnorder.centerToken) {
             if (token.get('layer') != 'gmlayer') {
                 sendPing(token.get('left'), token.get('top'), token.get('pageid'), null, true);
             }    
@@ -1793,7 +1805,7 @@ var CombatMaster = CombatMaster || (function() {
 //ANNOUNCE 
 //*************************************************************************************************************	  
     announcePlayer = function (token, target, prev, delay=false, show) {
-        let name, imgurl, conditions, image, doneButton, delayButton, contents,characterObj,players=[],playerObj;
+        let name, imgurl, conditions, image, doneButton, delayButton, contents,characterObj,playerObj;
 
         if (debug) {
             log('Announce Player')
@@ -1832,13 +1844,19 @@ var CombatMaster = CombatMaster || (function() {
         if (state[combatState].config.announcements.announceTurn) {
             makeAndSendMenu(contents, '', target);
             if (state[combatState].config.status.userChanges) {
-                characterObj    = getObj('character', token.get('represents'))    
-                players         = characterObj.get('controlledby').split(',')
-                if (typeof characterObj != 'undefined') {
-                    players.forEach((playerID) => {
-                        playerObj = getObj('player', playerID)
-                        sendMainMenu(playerObj.get('_displayname'))
-                    })
+                characterObj    = getObj('character', token.get('represents'))  
+                if (characterObj) {
+                    let controlledBy    = characterObj.get('controlledby')
+                    let players         = controlledBy.split(",")
+                    if (players.length > 0) {
+                        players.forEach((playerID) => {
+                            playerObj = getObj('player', playerID)
+                            if (playerObj) {
+                                let displayName = playerObj.get('displayname')
+                                sendMainMenu(displayName)
+                            }    
+                        })
+                    }
                 }
             }
         }    
@@ -1907,8 +1925,7 @@ var CombatMaster = CombatMaster || (function() {
             })
         }  
         output += '</div>'
-
-        log (output)  
+ 
         return output;
     },    
 //*************************************************************************************************************
@@ -1968,7 +1985,6 @@ var CombatMaster = CombatMaster || (function() {
         if (iconType == 'Token Marker') {
             if('undefined' !== typeof libTokenMarkers && libTokenMarkers.getOrderedList){
                 return libTokenMarkers.getStatus(icon).getHTML(1.7);
-    
             }
         } else if (iconType == 'Combat Master') {   
             let X = '';
@@ -2282,6 +2298,49 @@ var CombatMaster = CombatMaster || (function() {
         }    
 
         sendChat('player|'+playerID,content);        
+    },
+
+    macroResolver = (token,character) => (text) => {
+        const attrRegExp = /@{(?:([^|}]*)|(?:(selected)|(target)(?:\|([^|}]*))?)\|([^|}]*))(?:\|(max|current))?}/gm;
+    
+        const attrResolver = (full, name, selected, target, label, name2, type) => {
+            let simpleToken = JSON.parse(JSON.stringify(token));
+            let charName = character.get('name');
+
+            type = ['current','max'].includes(type) ? type : 'current';
+
+            const getAttr = (n, t) => (
+                    findObjs({type: 'attribute', name:n, characterid: character.id})[0]
+                    || {get:()=>getAttrByName(character.id,n,t)}
+                ).get(t);
+
+            const getFromChar = (n,t) => {
+                if('name'===n){
+                    return charName;
+                }
+                return getAttr(n,t);
+            };
+
+            const getProp = (n, t) => {
+                switch(n){
+                    case 'token_name':
+                        return simpleToken.name;
+                    case 'character_name':
+                        return charName;
+                    case 'bar1':
+                    case 'bar2':
+                    case 'bar3':
+                            return simpleToken[`${n}_${'max'===t ? 'max' : 'value'}`];
+                }
+                return getFromChar(n,t);
+            };
+
+            if(name){
+                return getFromChar(name,type);
+            }
+            return getProp(name2,type);
+        };
+        return text.replace(attrRegExp, attrResolver);
     },
 
     newSubstitution = function(cmdDetails) {
