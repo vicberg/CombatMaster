@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.3.3 Alpha',
+	    version = '1.3.4 Alpha',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1023,10 +1023,10 @@ var CombatMaster = CombatMaster || (function() {
             state[combatState].conditions.push(newCondition)
 
             if (newCondition.key == 'dead' || newCondition.duration <= 1) {
-                addMarker(tokenObj,icon,newCondition.duration)
+                addMarker(tokenObj,icon)
             } else {   
                 if (newCondition.duration >= 10) {
-                    addMarker(tokenObj,icon,newCondition.duration)
+                    addMarker(tokenObj,icon)
                 } else {
                     addMarker(tokenObj,icon,newCondition.duration)
                 }
@@ -1293,23 +1293,41 @@ var CombatMaster = CombatMaster || (function() {
     addMarker = function(tokenObj, marker, duration) {
         if (debug) {
             log('Add Marker')
+            
+            log('Duration:' + duration)
+        }
+        
+        let exists
+        let statusmarker
+        let statusmarkers
+        
+        if (tokenObj.get('statusmarkers')) {
+            statusmarkers = tokenObj.get('statusmarkers').split(',')
+        } else {
+            statusmarkers = []
+        } 
+        
+        if (duration) {
+            statusmarker = marker+'@'+duration
+        } else {
+            statusmarker = marker
+        }
+        
+        if (debug) {
             log('Marker:' + marker)
         }
         
-        let statusmarkers = tokenObj.get('statusmarkers').split(',')
-        let exists
-        
         [...statusmarkers].forEach((a, i) => {
             if (a.indexOf(marker) > -1) {
-                statusmarkers.splice(i,0,marker+'@'+duration)
+                statusmarkers.splice(i,0,statusmarker)
                 exists = true
             }        
         });        
         
         if (!exists) {
-            statusmarkers.push(marker+'@'+duration)
+            statusmarkers.push(statusmarker)
         }
-
+        log(statusmarkers)
         tokenObj.set('statusmarkers', statusmarkers.join())
     },
 
