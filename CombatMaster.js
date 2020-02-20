@@ -605,6 +605,7 @@ var CombatMaster = CombatMaster || (function() {
 				makeTextButton('Announce Turns', announcements.announceTurn, '!cm --config,announcements,key=announceTurn,value='+!announcements.announceTurn + ' --show,announce'),
 				makeTextButton('Whisper GM Only', announcements.whisperToGM, '!cm --config,announcements,key=whisperToGM,value='+!announcements.whisperToGM + ' --show,announce'),
 				makeTextButton('Shorten Long Names', announcements.handleLongName, '!cm --config,announcements,key=handleLongName,value='+!announcements.handleLongName + ' --show,announce'),
+                makeTextButton('Show NPC Conditions', announcements.showNPCTurns, '!cm --config,announcements,key=showNPCTurns,value='+!announcements.showNPCTurns + ' --show,announce'),				
 			],
 			contents = makeList(listItems, backButton);	
 
@@ -640,7 +641,6 @@ var CombatMaster = CombatMaster || (function() {
 				makeTextButton('Send Changes to Chat', state[combatState].config.status.sendConditions, '!cm --config,status,key=sendConditions,value='+!state[combatState].config.status.sendConditions+' --show,status'),	
 				makeTextButton('Clear Conditions on Close', state[combatState].config.status.clearConditions, '!cm --config,status,key=clearConditions,value='+!state[combatState].config.status.clearConditions + ' --show,status'),
 				makeTextButton('Use Messages', state[combatState].config.status.useMessage, '!cm --config,status,key=useMessage,value='+!state[combatState].config.status.useMessage + ' --show,status'),
-				makeTextButton('Show NPC Conditions', state[combatState].config.status.showNPCConditions, '!cm --config,status,key=showNPCConditions,value='+!state[combatState].config.status.showNPCConditions + ' --show,status'),
 			],			
 			contents = makeList(listItems, backButton);	
 
@@ -1899,7 +1899,7 @@ var CombatMaster = CombatMaster || (function() {
             if (players.length > 1) {
                 target = (state[combatState].config.announcements.whisperToGM) ? 'gm' : ''
             } else {
-                target = (!state[combatState].config.status.showNPCConditions) ? 'gm' : ''
+                target = (!state[combatState].config.announcements.showNPCTurns) ? 'gm' : ''
             }    
             makeAndSendMenu(contents,title,target);
         }   
@@ -2643,6 +2643,7 @@ var CombatMaster = CombatMaster || (function() {
                     whisperToGM: false,
                     announceRound: true,
                     handleLongName: true,
+					showNPCTurns: false,                    
                 },
                 macro: {
                     substitutions: [],
@@ -2655,7 +2656,6 @@ var CombatMaster = CombatMaster || (function() {
 					clearConditions: false,
 					showConditions: 'all',
 					useMessage: false,
-					showNPCConditions: false
 				},	
 			    conditions: {
 					blinded: {
@@ -3104,6 +3104,9 @@ var CombatMaster = CombatMaster || (function() {
                 if(!state[combatState].config.announcements.hasOwnProperty('handleLongName')){
                     state[combatState].config.announcements.handleLongName = combatDefaults.config.announcements.handleLongName;
                 }
+				if(!state[combatState].config.announcements.hasOwnProperty('showNPCTurns')){
+					state[combatState].config.announcements.showNPCTurns = combatDefaults.config.announcements.showNPCTurns;
+				}                
 			}
 
             if(!state[combatState].config.hasOwnProperty('macro')){
@@ -3132,9 +3135,6 @@ var CombatMaster = CombatMaster || (function() {
 				if(!state[combatState].config.status.hasOwnProperty('showConditions')){
 					state[combatState].config.status.showConditions = combatDefaults.config.status.showConditions;
 				}	
-				if(!state[combatState].config.status.hasOwnProperty('showNPCConditions')){
-					state[combatState].config.status.showNPCConditions = combatDefaults.config.status.showNPCConditions;
-				}					
             }
         }
         
@@ -3397,27 +3397,6 @@ var CombatMaster = CombatMaster || (function() {
                 log('Combat Master Timer Handout Found')
             }            
         } 
-
-        if (!combatMasterAnnounce) {
-            if (debug) {
-                log('Creating Combat Master Announce Handout')
-            }
-            notes =  '<h2>Combat Master Announce</h2><br>'  
-            notes += '<b>Announce Rounds</b> sends a message to chat when a new round has started.<br>'
-            notes += '<b>Announce Turns</b> sends the current active player in turnorder to chat, plus any conditions or messages assigned<br>'
-            notes += '<b>Whisper To GM</b> sends Rounds and Turns only to GM<br>' 
-            notes += '<b>Shorten Long Names</b> shortens the character name when sending the Turn to chat<br>' 
-            notes += '<b>Back</b> – Return to Setup Menu<br>'
-            combatMasterAnnounce =  createObj('handout', {
-                                name:'Combat Master Announce',
-                                avatar:'https://s3.amazonaws.com/files.d20.io/images/102632428/ag71PVqAznRIIPNorms5mw/original.png?15798774225'
-                            })
-            combatMasterAnnounce.set({notes:notes});
-        } else {
-            if (debug) {
-                log('Combat Master Announce Handout Found')
-            }            
-        }      
         
         if (!combatMasterAnnounce) {
             if (debug) {
@@ -3428,6 +3407,7 @@ var CombatMaster = CombatMaster || (function() {
             notes += '<b>Announce Turns</b> sends the current active player in turnorder to chat, plus any conditions or messages assigned<br>'
             notes += '<b>Whisper To GM</b> sends Rounds and Turns only to GM<br>' 
             notes += '<b>Shorten Long Names</b> shortens the character name when sending the Turn to chat<br>' 
+            notes += '<b>Show NPC Turns</b> determines if NPC turns are displayed to all players or GM only<br>' 
             notes += '<b>Back</b> – Return to Setup Menu<br>'
             combatMasterAnnounce =  createObj('handout', {
                                 name:'Combat Master Announce',
@@ -3450,7 +3430,6 @@ var CombatMaster = CombatMaster || (function() {
             notes += '<b>Send Changes to Chat</b> sends the Condition Description to Chat when a Condition is added to a token<br>'
             notes += '<b>Clear Conditions on Close</b> removes all Condition Icons from the token when the combat is stopped.  If this is turned off, the icons must be manually removed from the tokens<br>' 
             notes += '<b>Use Messages</b> enables messages to be included with conditions assigned to the token<br>' 
-            notes += '<b>Show NPC Conditions</b> determines if NPC conditions are displayed to all players or GM only<br>' 
             notes += '<b>Back</b> – Return to Setup Menu<br>'
             combatMasterStatus =  createObj('handout', {
                                 name:'Combat Master Status',
