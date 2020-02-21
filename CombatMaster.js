@@ -1,5 +1,5 @@
 /* 
- * Version 1.4 Alpha
+ * Version 1.5 Alpha
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.4 Alpha',
+	    version = '1.5 Alpha',
         timerObj,
         intervalHandle,
         debug = true,
@@ -160,6 +160,8 @@ var CombatMaster = CombatMaster || (function() {
         let lookup = values.lookup
         let tokens = values.tokens
 
+        log('Lookup:' + lookup)
+        log('Tokens:' + tokens)
         //find the action and set the cmdSep Action
 	    cmdSep.action = String(tokens).match(/turn|show|config|back|reset|main|remove|add|new|delete|import|export/);
         //the ./ is an escape within the URL so the hyperlink works.  Remove it
@@ -735,12 +737,12 @@ var CombatMaster = CombatMaster || (function() {
 		listItems.push(makeTextButton('Favorites', condition.favorite, '!cm --config,condition='+key+',key=favorite,value='+!condition.favorite+' --show,condition='+key))
 		listItems.push(makeTextButton('Message', condition.message, '!cm --config,condition='+key+',key=message,value=?{Message}) --show,condition='+key))
         listItems.push('<div style="margin-top:3px"><i><b>Adding Condition</b></i></div>' )
-		listItems.push(makeTextButton('Token Mod', condition.addAPI, '!cm --config,condition='+key+',key=addAPI,value=?{API Command|} --show,condition='+key))
+		listItems.push(makeTextButton('API', condition.addAPI, '!cm --config,condition='+key+',key=addAPI,value=?{API Command|} --show,condition='+key))
 		listItems.push(makeTextButton('Roll20AM', condition.addRoll20AM, '!cm --config,condition='+key+',key=addRoll20AM,value=?{Roll20AM Command|} --show,condition='+key))
 		listItems.push(makeTextButton('FX', condition.addFX, '!cm --config,condition='+key+',key=addFX,value=?{FX|} --show,condition='+key))
 		listItems.push(makeTextButton('Macro', condition.addMacro, '!cm --config,condition='+key+',key=addMacro,value=?{Macro|} --show,condition='+key))
         listItems.push('<div style="margin-top:3px"><i><b>Removing Condition</b></i></div>' )
-		listItems.push(makeTextButton('Token Mod', condition.remAPI, '!cm --config,condition='+key+',key=remAPI,value=?{API Command|} --show,condition='+key))
+		listItems.push(makeTextButton('API', condition.remAPI, '!cm --config,condition='+key+',key=remAPI,value=?{API Command|} --show,condition='+key))
 		listItems.push(makeTextButton('Roll20AM', condition.remRoll20AM, '!cm --config,condition='+key+',key=remRoll20AM,value=?{Roll20AM Command|} --show,condition='+key))
 		listItems.push(makeTextButton('FX', condition.remFX, '!cm --config,condition='+key+',key=remFX,value=?{FX|} --show,condition='+key))
 		listItems.push(makeTextButton('Macro', condition.remMacro, '!cm --config,condition='+key+',key=remMacro,value=?{Macro|} --show,condition='+key))
@@ -756,7 +758,6 @@ var CombatMaster = CombatMaster || (function() {
             selectedTokens.forEach(token => {
                 if (token._type == 'graphic') {
                     if (token._id != getOrCreateMarker(false).get('id') && token._id != getOrCreateMarker(true).get('id')) {
-//                        tokenObj = getObj('graphic', token._id);
                         announcePlayer(getObj('graphic', token._id), false, false, true);
                     }    
                 }
@@ -956,7 +957,7 @@ var CombatMaster = CombatMaster || (function() {
         	selectedTokens.forEach(token => {
         	    if (token._type == 'graphic') {
     			    addConditionToToken(getObj(token._type, token._id),cmdDetails.details.condition,cmdDetails.details.duration,cmdDetails.details.direction,cmdDetails.details.message)    
-    			    doAddConditionCalls(token,cmdDetails.details.condition,playerID)
+    			    doAddConditionCalls(getObj(token._type, token._id),cmdDetails.details.condition,playerID)
         	    }
         	});	 	
         } else {
@@ -1550,9 +1551,9 @@ var CombatMaster = CombatMaster || (function() {
     },
 
     doTurnorderChange = function (prev=false, delay=false) {
-        let turn   = getCurrentTurn(),
-            marker = getOrCreateMarker(),
-            tokenObj  = getObj('graphic', turn.id);
+        let turn        = getCurrentTurn(),
+            marker      = getOrCreateMarker(),
+            tokenObj    = getObj('graphic', turn.id);
 
         if(debug) {
             log('Turn Order Change')
@@ -1583,7 +1584,7 @@ var CombatMaster = CombatMaster || (function() {
             changeMarker(tokenObj);
             announcePlayer(tokenObj, prev, delay);
             centerToken(tokenObj);
-            doRoundCalls(tokenObj)            
+            doTurnCalls(tokenObj)            
         } else {
             resetMarker();
         }
@@ -1870,7 +1871,6 @@ var CombatMaster = CombatMaster || (function() {
         } else {
             contents   += '<div style="display:inline-block;vertical-aligh:middle">'+name+'</div>'
         }
-
         
         contents += conditions
         
@@ -1893,10 +1893,7 @@ var CombatMaster = CombatMaster || (function() {
 
         if (characterObj && state[combatState].config.announcements.announceTurn) {
             let target
-            log('announcing player')
-            log(players.length)
-            log(players)
-            if (players.length > 1) {
+            if (players[0] != "") {
                 target = (state[combatState].config.announcements.whisperToGM) ? 'gm' : ''
             } else {
                 target = (!state[combatState].config.announcements.showNPCTurns) ? 'gm' : ''
@@ -2080,318 +2077,231 @@ var CombatMaster = CombatMaster || (function() {
 //*************************************************************************************************************
 //EXTERNAL CALLS 
 //*************************************************************************************************************
-    doFX = function (token, turn) {
-        let fx, pos
-        switch(type) {
-            case 'turn':
-                fx = state[combatState].config.turnorder.turnMacro
-            case 'round':
-                fx = state[combatState].config.turnorder.roundMacro
-            case 'add':    
-                fx = state[combatState].config.conditions[condition].addMacro
-            case 'remove':    
-                fx = state[combatState].config.conditions[condition].remMacro
-            default:
-                break;  
-        }        
-        
-        if (!['None',''].includes(macroName) && token.get('layer') != 'gmlayer') {
-            pos = {x: token.get('left'), y: token.get('top')};
-            spawnFxBetweenPoints(pos, pos, fx, token.get('pageid'));
-        }    
-    },
-
     doTurnorderCalls = function () {
-        let turnorder = getTurnorder(), turnConfig = state[combatState].config.turnorder, 
-            tokenObj, characterObj, macroObj, action, macro, api, roll20am, type
-
         if (debug) {
-            log("doTurnorderCalls")
+            log("Do Turnorder External Calls")
         }
         
-        if (!['None',''].includes(turnConfig.allRoundMacro)) {
-            macro = turnConfig.allRoundMacro
-            type      = 'all'
-        }
-        if (!['None',''].includes(turnConfig.characterRoundMacro)) {
-            macro = turnConfig.characterRoundMacro
-            type      = 'character'
-        }
-        if (!['None',''].includes(turnConfig.roundAPI)) {
-            api = turnConfig.roundAPI
-        }
-        if (!['None',''].includes(turnConfig.roundRoll20AM)) {
-            roll20am = turnConfig.roundRoll20AM
-        }  
+        let config     = state[combatState].config.turnorder 
+        let turnorder  = getTurnorder()
+        let tokenObj, characterObj, ability
         
-        if (macro) {
-            macroObj = findObjs({type: 'macro',name: macro}, {caseinsensitive: true})[0]    
-            action = macroObj.get('action')
-            if (!macroObj) {
-                sendChat('','Macro Name Not Found!');
-                return;
-            }             
-        }  
+//         turnorder.forEach((turn) => {
+ 
+//             if (turn.id !== getOrCreateMarker().get('id')) {
+//                 tokenObj     = getObj('graphic',turn.id)
+//                 characterObj = getObj('character',tokenObj.get('represents'))
 
+//                 if (characterObj) {
+//                     if (!['None',''].includes(config.allRoundMacro)) {
+//                         ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:config.turnMacro})[0]
+//                         if (ability) {
+//                             sendCalltoChat(tokenObj,characterObj,ability.get('action'))
+//                         } else {
+//                             ability = findObjs({_type:'macro', name:config.turnMacro})[0]
+//                             if (ability) {
+//                                 sendCalltoChat(tokenObj,characterObj,ability.get('action'))
+//                             }                    
+//                         }
+//                     }
+//                     log(config.characterRoundMacro)
+//                     log(characterObj.get('controlledby').length)
+//                     if (characterObj.get('controlledby').length > 1 && !['None',''].includes(config.characterRoundMacro)) {
+
+// //                         ability = findObjs({ _type:'macro', name:config.characterRoundMacro})[0]
+// //                         log(ability)
+// //                         if (ability) {
+// //                             content = macroResolver(tokenObj,characterObj)(ability.get('action')).replace(/\[\[\s+/g,'[[');
+// //                             log(content)
+// // //                            sendCalltoChat(tokenObj,characterObj,ability.get('action'))
+// //                         }   
+//                     }
+//                     // if (!['None',''].includes(config.roundAPI)) {
+//                     //     sendCalltoChat(tokenObj,characterObj,config.roundAPI)
+//                     // }
+//                     // if (!['None',''].includes(config.roundRoll20AM)) {
+//                     //     sendCalltoChat(tokenObj,characterObj,config.roundRoll20AM)
+//                     // }          
+//                     // if (!['None',''].includes(config.roundFX)) {
+//                     //     sendCalltoChat(tokenObj,characterObj,config.roundFX)
+//                     // }                     
+//                 }
+//             }
+//         });
+    },
+ 
+    doTurnCalls = function (tokenObj) {
         if (debug) {
-            log('Macro:'+macro)
-            log('Type:'+type)
-            log('API:'+api)
-            log('Roll20AM:'+roll20am)
-        }    
+            log("Do Turn External Calls")
+        }
         
-        turnorder.forEach((turn) => {
-            if (turn.id !== getOrCreateMarker().get('id')) {
-                tokenObj     = getObj('graphic',turn.id);
-                characterObj = getObj('character',tokenObj.get('represents'));
-
-                if (characterObj) {
-                    if (type == 'all') {
-                        sendCalltoChat(tokenObj,characterObj,action)
-                    }
-                    if (type == 'character' && characterObj.get('controlledby')) {
-                        sendCalltoChat(tokenObj,characterObj,action)
-                    }
-                    if (api) {
-                        sendCalltoChat(tokenObj,characterObj,api)
-                    }
-                    if (roll20am) {
-                        sendCalltoChat(tokenObj,characterObj,roll20am)
+        let config = state[combatState].config.turnorder
+        let characterObj = getObj('character',tokenObj.get('represents'));
+        let ability
+            
+        if (characterObj) {
+            if (!['None',''].includes(config.turnMacro)) {
+                ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:config.turnMacro})[0]
+                if (ability) {
+                    sendCalltoChat(tokenObj,characterObj,ability.get('action'))
+                } else {
+                    ability = findObjs({_type:'macro', name:config.turnMacro})[0]
+                    if (ability) {
+                        sendCalltoChat(tokenObj,characterObj,ability.get('action'))
                     }                    
                 }
             }
-        });
-    },
- 
-    doRoundCalls = function (token) {
-        let turnConfig = state[combatState].config.turnorder, 
-            characterObj, macroObj, action, macro, api, roll20am, type, tokenObj
-
-        if (debug) {
-            log("doRoundCalls")
-        }
-        
-        if (!['None',''].includes(turnConfig.turnMacro)) {
-            macro = turnConfig.turnMacro
-        }
-        if (!['None',''].includes(turnConfig.turnAPI)) {
-            api = turnConfig.turnAPI
-        }
-        if (!['None',''].includes(turnConfig.turnRoll20AM)) {
-            roll20am = turnConfig.turnRoll20AM
-        }  
-        
-        if (macro) {
-            macroObj = findObjs({type: 'macro',name: macro}, {caseinsensitive: true})[0]    
-            action = macroObj.get('action')
-            if (!macroObj) {
-                sendChat('','Macro Name Not Found!');
-                return;
-            }             
-        }  
-
-        if (debug) {
-            log('Macro:'+macro)
-            log('Type:'+type)
-            log('API:'+api)
-            log('Roll20AM:'+roll20am)
-        }    
-        
-        //tokenObj     = getObj('graphic',token.get('_id');
-        characterObj = getObj('character',token.get('represents'));
-
-        if (characterObj) {
-            if (action) {
-                sendCalltoChat(tokenObj,characterObj,action)
+            if (!['None',''].includes(config.turnAPI)) {
+                sendCalltoChat(tokenObj,characterObj,config.turnAPI)
             }
-            if (api) {
-                sendCalltoChat(tokenObj,characterObj,api)
-            }
-            if (roll20am) {
-                sendCalltoChat(tokenObj,characterObj,roll20am)
-            }                    
+            if (!['None',''].includes(config.turnRoll20AM)) {
+                sendCalltoChat(tokenObj,characterObj,config.roundRoll20AM)
+            }          
+            if (!['None',''].includes(config.turnFX)) {
+                sendCalltoChat(tokenObj,characterObj,config.turnFX)
+            }                     
         }
     },
  
-    doAddConditionCalls = function (token,key,playerID) {
-        let condition = state[combatState].config.conditions[key], 
-            characterObj, macroObj, action, macro, api, roll20am, type, tokenObj
-
+    doAddConditionCalls = function (tokenObj,key,playerID) {
         if (debug) {
             log("Do Add Condition Calls")
         }
 
-        if (!['None',''].includes(condition.addMacro)) {
-            macro = condition.addMacro
-        }
-        if (!['None',''].includes(condition.addAPI)) {
-            api = condition.addAPI.replace(/{/g,'')
-            api = api.replace(/}/g,'')
-        }
-        if (!['None',''].includes(condition.addRoll20AM)) {
-            roll20am = condition.addRoll20AM
-        }  
-
-        if (macro) {
-            macroObj = findObjs({type: 'macro',name: macro}, {caseinsensitive: true})[0]    
-            action = macroObj.get('action')
-            if (!macroObj) {
-                sendChat('','Macro Name Not Found!');
-                return;
-            }             
-        }  
-
-        if (debug) {
-            log('Macro:'+macro)
-            log('Type:'+type)
-            log('API:'+api)
-            log('Roll20AM:'+roll20am)
-        }    
+        let condition = state[combatState].config.conditions[key]
+        let characterObj = getObj('character',tokenObj.get('represents'));
+        let macro
         
-        tokenObj     = getObj('graphic',token._id);
-        characterObj = getObj('character',tokenObj.get('represents'));
-
         if (characterObj) {
-            if (action) {
-                sendCalltoChat(tokenObj, characterObj, action, playerID)
+            if (!['None',''].includes(condition.addMacro)) {
+                macro = findObjs({_characterid:tokenObj.get('represents'), _type:'macro', name:condition.addMacro})[0]
+                if (macro) {
+                    sendCalltoChat(tokenObj,characterObj,macro.get('action'))
+                }   
             }
-            if (api) {
-                sendCalltoChat(tokenObj, characterObj, api, playerID)
+            if (!['None',''].includes(condition.addAPI)) {
+                sendCalltoChat(tokenObj,characterObj,condition.addAPI)
             }
-            if (roll20am) {
-                sendCalltoChat(tokenObj, characterObj, roll20am, playerID)
-            }                    
+            if (!['None',''].includes(condition.addRoll20AM)) {
+                sendCalltoChat(tokenObj,characterObj,condition.addRoll20AM)
+            }    
+            if (!['None',''].includes(condition.addFX)) {
+                sendCalltoChat(tokenObj,characterObj,condition.addFX)
+            }  
         }
     },
   
-    doRemoveConditionCalls = function (token,key) {
-        let condition = state[combatState].config.conditions[key], 
-            characterObj, macroObj, action, macro, api, roll20am, type, tokenObj
-
+    doRemoveConditionCalls = function (tokenObj,key) {
         if (debug) {
             log("Do Remove Condition Calls")
         }
         
-        if (!['None',''].includes(condition.remMacro)) {
-            macro = condition.remMacro
-        }
-        if (!['None',''].includes(condition.remAPI)) {
-            api = condition.remAPI
-        }
-        if (!['None',''].includes(condition.remRoll20AM)) {
-            roll20am = condition.remRoll20AM
-        }  
-
-        if (macro) {
-            macroObj = findObjs({type: 'macro',name: macro}, {caseinsensitive: true})[0]    
-            action = macroObj.get('action')
-            if (!macroObj) {
-                sendChat('','Macro Name Not Found!');
-                return;
-            }             
-        }  
-
-        if (debug) {
-            log('Macro:'+macro)
-            log('Type:'+type)
-            log('API:'+api)
-            log('Roll20AM:'+roll20am)
-        }    
+        let condition = state[combatState].config.conditions[key]
+        let characterObj = getObj('character',tokenObj.get('represents'));
+        let macro
         
-        tokenObj     = getObj('graphic',token._id);
-        characterObj = getObj('character',tokenObj.get('represents'));
-
         if (characterObj) {
-            if (action) {
-                sendCalltoChat(tokenObj,characterObj,action)
+            if (!['None',''].includes(condition.remMacro)) {
+                macro = findObjs({_characterid:tokenObj.get('represents'), _type:'macro', name:condition.remMacro})[0]
+                if (macro) {
+                    sendCalltoChat(tokenObj,characterObj,macro.get('action'))
+                }   
             }
-            if (api) {
-                sendCalltoChat(tokenObj,characterObj,api)
+            if (!['None',''].includes(condition.remAPI)) {
+                sendCalltoChat(tokenObj,characterObj,condition.remAPI)
             }
-            if (roll20am) {
-                sendCalltoChat(tokenObj,characterObj,roll20am)
-            }                    
+            if (!['None',''].includes(condition.remRoll20AM)) {
+                sendCalltoChat(tokenObj,characterObj,condition.remRoll20AM)
+            }    
+            if (!['None',''].includes(condition.remFX)) {
+                sendCalltoChat(tokenObj,characterObj,condition.remFX)
+            }                       
         }
     },    
 
     sendCalltoChat = function(tokenObj,characterObj,action,playerID) {
-        let substitutions = state[combatState].config.macro.substitutions, content
-    	
         if (debug) {
             log("sendCalltoChat")
             log('Token:'+tokenObj.get('_id'))
             log('Character:'+characterObj.get('name'))
-            log('Action:'+action)
         }
+        
+        let substitutions = state[combatState].config.macro.substitutions
+        let replaceString
         
         if (substitutions) {
             substitutions.forEach((substitution) => {
-                log(substitution)
+                replaceString = new RegExp(substitution.action, "g");                
                 if (substitution.type == 'CharName') {
-                    content = action.replace(substitution.action,characterObj.get('name'))
+                    action = action.replace(replaceString, characterObj.get('name'), 'g');  
                 } else if (substitution.type == 'CharID') {
-                    content = action.replace(substitution.action,characterObj.get('_id'))
+                    action = action.replace(replaceString, characterObj.get('_id'), 'g')
                 } else if (substitution.type == 'TokenID') {
-                    content = action.replace(substitution.action,tokenObj.get('_id'))
+                    action = action.replace(replaceString, tokenObj.get('_id'), 'g')
                 }    
             })
-        } else {
-            content = action
-        }    
-
-        sendChat(scrript_name,content);        
+        } 
+        sendChat(tokenObj.get('name'), action, null, {noarchive:true});
     },
-
-    macroResolver = (token,character) => (text) => {
-        const attrRegExp = /@{(?:([^|}]*)|(?:(selected)|(target)(?:\|([^|}]*))?)\|([^|}]*))(?:\|(max|current))?}/gm;
     
-        const attrResolver = (full, name, selected, target, label, name2, type) => {
-            let simpleToken = JSON.parse(JSON.stringify(token));
-            let charName = character.get('name');
+    // macroResolver = (token,character) => (text) => {
+    //     if (debug) {
+    //         log('Macro Resolver')
+    //     }
+    //     log(token)
+    //     log(character)
+    //     const attrRegExp = /@{(?:([^|}]*)|(?:(selected)|(target)(?:\|([^|}]*))?)\|([^|}]*))(?:\|(max|current))?}/gm;
 
-            type = ['current','max'].includes(type) ? type : 'current';
+    //     const attrResolver = (full, name, selected, target, label, name2, type) => {
+    //         let simpleToken = JSON.parse(JSON.stringify(token));
+    //         let charName = character.get('name');
 
-            const getAttr = (n, t) => (
-                    findObjs({type: 'attribute', name:n, characterid: character.id})[0]
-                    || {get:()=>getAttrByName(character.id,n,t)}
-                ).get(t);
+    //         type = ['current','max'].includes(type) ? type : 'current';
 
-            const getFromChar = (n,t) => {
-                if('name'===n){
-                    return charName;
-                }
-                return getAttr(n,t);
-            };
+    //         const getAttr = (n, t) => (
+    //                 findObjs({type: 'attribute', name:n, characterid: character.id})[0]
+    //                 || {get:()=>getAttrByName(character.id,n,t)}
+    //             ).get(t);
 
-            const getProp = (n, t) => {
-                switch(n){
-                    case 'token_name':
-                        return simpleToken.name;
-                    case 'character_name':
-                        return charName;
-                    case 'bar1':
-                    case 'bar2':
-                    case 'bar3':
-                            return simpleToken[`${n}_${'max'===t ? 'max' : 'value'}`];
-                }
-                return getFromChar(n,t);
-            };
+    //         const getFromChar = (n,t) => {
+    //             if('name'===n){
+    //                 return charName;
+    //             }
+    //             return getAttr(n,t);
+    //         };
 
-            if(name){
-                return getFromChar(name,type);
-            }
-            return getProp(name2,type);
-        };
-        return text.replace(attrRegExp, attrResolver);
-    },
+    //         const getProp = (n, t) => {
+    //             switch(n){
+    //                 case 'token_name':
+    //                     return simpleToken.name;
+    //                 case 'character_name':
+    //                     return charName;
+    //                 case 'bar1':
+    //                 case 'bar2':
+    //                 case 'bar3':
+    //                         return simpleToken[`${n}_${'max'===t ? 'max' : 'value'}`];
+    //             }
+    //             return getFromChar(n,t);
+    //         };
 
+    //         if(name){
+    //             return getFromChar(name,type);
+    //         }
+    //         return getProp(name2,type);
+    //     };
+    //     return text.replace(attrRegExp, attrResolver);
+    // },
+
+    
+//*************************************************************************************************************
+//SUBSTITUTIONS 
+//*************************************************************************************************************	   
     newSubstitution = function(cmdDetails) {
-        let substitution
         if (debug) {
             log('Add Substitution')
         }
         
-        substitution = {
+        let substitution = {
             type: cmdDetails.details.type,
             action: cmdDetails.details.action
         }
@@ -2399,46 +2309,21 @@ var CombatMaster = CombatMaster || (function() {
         state[combatState].config.macro.substitutions.push(substitution)
         log(state[combatState].config.macro.substitutions)
 		sendMacroMenu();		
-    },    
-
-
+    },  
+    
     removeSubstitution = function(cmdDetails) {
         if (debug) {
             log('Remove Substitution')
         }
+        
         state[combatState].config.macro.substitutions.forEach((substitution, i) => {
             if (substitution.action == cmdDetails.details.action) {
                 state[combatState].config.macro.substitutions.splice(i,1)
             }
         })
-
-
 		sendMacroMenu();
-    },  
-    
-    doAPI = function (token, turn) {
-        let fx, pos
-        switch(type) {
-            case 'turn':
-                fx = state[combatState].config.turnorder.turnMacro
-            case 'round':
-                fx = state[combatState].config.turnorder.roundMacro
-            case 'add':    
-                fx = state[combatState].config.conditions[condition].addMacro
-            case 'remove':    
-                fx = state[combatState].config.conditions[condition].remMacro
-            default:
-                break;  
-        }        
-        
-        if (!['None',''].includes(macroName) && token.get('layer') != 'gmlayer') {
-            pos = {x: token.get('left'), y: token.get('top')};
-            spawnFxBetweenPoints(pos, pos, fx, token.get('pageid'));
-        }    
-    },    
-//*************************************************************************************************************
-//MISC 
-//*************************************************************************************************************	     
+    },      
+     
     inFight = function () {
         return (Campaign().get('initiativepage') !== false);
     },
