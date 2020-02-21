@@ -1,5 +1,5 @@
 /* 
- * Version 1.6 Alpha
+ * Version 1.6.1 Alpha
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.6 Alpha',
+	    version = '1.6.1 Alpha',
         timerObj,
         intervalHandle,
         debug = true,
@@ -2141,7 +2141,7 @@ var CombatMaster = CombatMaster || (function() {
         
         let config = state[combatState].config.turnorder
         let characterObj = getObj('character',tokenObj.get('represents'));
-        let ability, key, condition
+        let key, condition, ability, macro
         
         if (characterObj) {
             if (!['None',''].includes(config.turnMacro)) {
@@ -2149,26 +2149,26 @@ var CombatMaster = CombatMaster || (function() {
                 if (ability) {
                     sendCalltoChat(tokenObj,characterObj,ability.get('action'))
                 } else {
-                    ability = findObjs({_type:'macro', name:config.turnMacro})[0]
-                    if (ability) {
-                        sendCalltoChat(tokenObj,characterObj,ability.get('action'))
+                    macro = findObjs({_type:'macro', name:config.turnMacro})[0]
+                    if (macro) {
+                        sendCalltoChat(tokenObj,characterObj,macro.get('action'))
                     }                    
                 }
             }
             for (key in state[combatState].conditions) {
                 log(state[combatState].conditions[key])
                 condition = state[combatState].conditions[key]
-                // if (tokenObj.get('_id') = condition.id && condition.addPersistentMacro) {
-                //     ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addMacro})[0]
-                //     if (ability) {
-                //         sendCalltoChat(tokenObj,characterObj,ability.get('action'))
-                //     } else {
-                //         ability = findObjs({_type:'macro', name:config.condition.addMacro})[0]
-                //         if (ability) {
-                //             sendCalltoChat(tokenObj,characterObj,ability.get('action'))
-                //         }                    
-                //     }
-                // }
+                if (tokenObj.get('_id') == condition.id && condition.addPersistentMacro) {
+                    ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addMacro})[0]
+                    if (ability) {
+                        sendCalltoChat(tokenObj,characterObj,ability.get('action'))
+                    } else {
+                        macro = findObjs({_type:'macro', name:condition.addMacro})[0]
+                        if (macro) {
+                            sendCalltoChat(tokenObj,characterObj,macro.get('action'))
+                        }                    
+                    }
+                }
             }
             if (!['None',''].includes(config.turnAPI)) {
                 sendCalltoChat(tokenObj,characterObj,config.turnAPI)
@@ -2193,7 +2193,8 @@ var CombatMaster = CombatMaster || (function() {
         
         if (characterObj) {
             if (!['None',''].includes(condition.addMacro)) {
-                macro = findObjs({_characterid:tokenObj.get('represents'), _type:'macro', name:condition.addMacro})[0]
+                macro = findObjs({_type:'macro', name:condition.addMacro})[0]
+                log(macro)
                 if (macro) {
                     sendCalltoChat(tokenObj,characterObj,macro.get('action'))
                 }   
@@ -2221,7 +2222,7 @@ var CombatMaster = CombatMaster || (function() {
         
         if (characterObj) {
             if (!['None',''].includes(condition.remMacro)) {
-                macro = findObjs({_characterid:tokenObj.get('represents'), _type:'macro', name:condition.remMacro})[0]
+                macro = findObjs({_type:'macro', name:condition.remMacro})[0]
                 if (macro) {
                     sendCalltoChat(tokenObj,characterObj,macro.get('action'))
                 }   
