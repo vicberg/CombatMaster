@@ -1,5 +1,5 @@
 /* 
- * Version 1.5 Alpha
+ * Version 1.5.1 Alpha
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.5 Alpha',
+	    version = '1.5.1 Alpha',
         timerObj,
         intervalHandle,
         debug = true,
@@ -976,7 +976,7 @@ var CombatMaster = CombatMaster || (function() {
         	selectedTokens.forEach(token => {
         	    if (token._type == 'graphic') {
     			    removeConditionFromToken(getObj(token._type, token._id), cmdDetails.details.condition)   
-    			    doRemoveConditionCalls(token,cmdDetails.details.condition)
+    			    doRemoveConditionCalls(getObj(token._type, token._id),cmdDetails.details.condition)
         	    }    
         	});	 	
         }	
