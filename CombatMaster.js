@@ -1,5 +1,5 @@
 /* 
- * Version 1.5.1 Alpha
+ * Version 1.6 Alpha
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.5.1 Alpha',
+	    version = '1.6 Alpha',
         timerObj,
         intervalHandle,
         debug = true,
@@ -741,6 +741,7 @@ var CombatMaster = CombatMaster || (function() {
 		listItems.push(makeTextButton('Roll20AM', condition.addRoll20AM, '!cm --config,condition='+key+',key=addRoll20AM,value=?{Roll20AM Command|} --show,condition='+key))
 		listItems.push(makeTextButton('FX', condition.addFX, '!cm --config,condition='+key+',key=addFX,value=?{FX|} --show,condition='+key))
 		listItems.push(makeTextButton('Macro', condition.addMacro, '!cm --config,condition='+key+',key=addMacro,value=?{Macro|} --show,condition='+key))
+		listItems.push(makeTextButton('Persistent Macro', condition.addPersistentMacro, '!cm --config,condition='+key+',key=addPersistentMacro,value='+!condition.addPersistentMacro+' --show,condition='+key))
         listItems.push('<div style="margin-top:3px"><i><b>Removing Condition</b></i></div>' )
 		listItems.push(makeTextButton('API', condition.remAPI, '!cm --config,condition='+key+',key=remAPI,value=?{API Command|} --show,condition='+key))
 		listItems.push(makeTextButton('Roll20AM', condition.remRoll20AM, '!cm --config,condition='+key+',key=remRoll20AM,value=?{Roll20AM Command|} --show,condition='+key))
@@ -868,6 +869,7 @@ var CombatMaster = CombatMaster || (function() {
 				addRoll20AM: 'None',
 				addFX: 'None',
 				addMacro: 'None',
+				addPersistentMacro: false,
 				remAPI: 'None',
 				remRoll20AM: 'None',
 				remFX: 'None',
@@ -993,13 +995,15 @@ var CombatMaster = CombatMaster || (function() {
             
             let removed = removeConditionFromToken(tokenObj, key);   
            
-            defaultCondition        = getConditionByKey(key)
-            newCondition.id         = tokenObj.get("_id")
-            newCondition.key        = key
-            newCondition.name       = defaultCondition.name
-            newCondition.icon       = defaultCondition.icon
-            newCondition.iconType   = defaultCondition.iconType
-
+            defaultCondition                = getConditionByKey(key)
+            newCondition.id                 = tokenObj.get("_id")
+            newCondition.key                = key
+            newCondition.name               = defaultCondition.name
+            newCondition.icon               = defaultCondition.icon
+            newCondition.iconType           = defaultCondition.iconType
+            newCondition.addMacro           = defaultCondition.addMacro
+            newCondition.addPersistentMacro = defaultCondition.addPersistentMacro
+            
             let icon
             if (newCondition.iconType == 'Token Marker') {
                 if('undefined' !== typeof libTokenMarkers && libTokenMarkers.getOrderedList){
@@ -1036,7 +1040,7 @@ var CombatMaster = CombatMaster || (function() {
                     newCondition.message = message
                 }   
             }  
-           
+            
             state[combatState].conditions.push(newCondition)
 
             if (newCondition.key == 'dead' || newCondition.duration <= 1) {
@@ -2137,8 +2141,8 @@ var CombatMaster = CombatMaster || (function() {
         
         let config = state[combatState].config.turnorder
         let characterObj = getObj('character',tokenObj.get('represents'));
-        let ability
-            
+        let ability, key, condition
+        
         if (characterObj) {
             if (!['None',''].includes(config.turnMacro)) {
                 ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:config.turnMacro})[0]
@@ -2150,6 +2154,21 @@ var CombatMaster = CombatMaster || (function() {
                         sendCalltoChat(tokenObj,characterObj,ability.get('action'))
                     }                    
                 }
+            }
+            for (key in state[combatState].conditions) {
+                log(state[combatState].conditions[key])
+                condition = state[combatState].conditions[key]
+                // if (tokenObj.get('_id') = condition.id && condition.addPersistentMacro) {
+                //     ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addMacro})[0]
+                //     if (ability) {
+                //         sendCalltoChat(tokenObj,characterObj,ability.get('action'))
+                //     } else {
+                //         ability = findObjs({_type:'macro', name:config.condition.addMacro})[0]
+                //         if (ability) {
+                //             sendCalltoChat(tokenObj,characterObj,ability.get('action'))
+                //         }                    
+                //     }
+                // }
             }
             if (!['None',''].includes(config.turnAPI)) {
                 sendCalltoChat(tokenObj,characterObj,config.turnAPI)
@@ -2558,6 +2577,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2578,6 +2598,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2598,6 +2619,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2618,6 +2640,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2638,6 +2661,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2658,6 +2682,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2678,6 +2703,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2698,6 +2724,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2718,6 +2745,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2738,6 +2766,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2758,6 +2787,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2778,6 +2808,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2798,6 +2829,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2818,6 +2850,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -2838,6 +2871,7 @@ var CombatMaster = CombatMaster || (function() {
 						addRoll20AM: 'None',
 						addFX: 'None',
 						addMacro: 'None',
+						addPersistentMacro: false,
 						remAPI: 'None',
 						remRoll20AM: 'None',
 						remFX: 'None',
@@ -3063,6 +3097,9 @@ var CombatMaster = CombatMaster || (function() {
                 if (!condition.hasOwnProperty('addMacro')) {
                     condition.addMacro = 'None'
                 }  
+                if (!condition.hasOwnProperty('addPersistentMacro')) {
+                    condition.addPersistentMacro = false
+                }                  
                 if (!condition.hasOwnProperty('remAPI')) {
                     condition.remAPI = 'None'
                 }    
