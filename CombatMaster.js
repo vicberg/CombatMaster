@@ -2185,7 +2185,7 @@ var CombatMaster = CombatMaster || (function() {
                 sendCalltoChat(tokenObj,characterObj,config.roundRoll20AM)
             }          
             if (!['None',''].includes(config.turnFX)) {
-                sendCalltoChat(tokenObj,characterObj,config.turnFX)
+                doFX(tokenObj,config.turnFX)
             }                     
         }
     },
@@ -2214,7 +2214,7 @@ var CombatMaster = CombatMaster || (function() {
                 sendCalltoChat(tokenObj,characterObj,condition.addRoll20AM)
             }    
             if (!['None',''].includes(condition.addFX)) {
-                sendCalltoChat(tokenObj,characterObj,condition.addFX)
+                doFX(tokenObj,condition.addFX)
             }  
         }
     },
@@ -2242,7 +2242,7 @@ var CombatMaster = CombatMaster || (function() {
                 sendCalltoChat(tokenObj,characterObj,condition.remRoll20AM)
             }    
             if (!['None',''].includes(condition.remFX)) {
-                sendCalltoChat(tokenObj,characterObj,condition.remFX)
+                doFX(tokenObj,condition.remFX)
             }                       
         }
     },    
@@ -2272,53 +2272,12 @@ var CombatMaster = CombatMaster || (function() {
         sendChat(tokenObj.get('name'), action, null, {noarchive:true});
     },
     
-    // macroResolver = (token,character) => (text) => {
-    //     if (debug) {
-    //         log('Macro Resolver')
-    //     }
-    //     log(token)
-    //     log(character)
-    //     const attrRegExp = /@{(?:([^|}]*)|(?:(selected)|(target)(?:\|([^|}]*))?)\|([^|}]*))(?:\|(max|current))?}/gm;
+    doFX = function (tokenObj, fx) {
+        if(tokenObj.get('layer') === 'gmlayer') return;
 
-    //     const attrResolver = (full, name, selected, target, label, name2, type) => {
-    //         let simpleToken = JSON.parse(JSON.stringify(token));
-    //         let charName = character.get('name');
-
-    //         type = ['current','max'].includes(type) ? type : 'current';
-
-    //         const getAttr = (n, t) => (
-    //                 findObjs({type: 'attribute', name:n, characterid: character.id})[0]
-    //                 || {get:()=>getAttrByName(character.id,n,t)}
-    //             ).get(t);
-
-    //         const getFromChar = (n,t) => {
-    //             if('name'===n){
-    //                 return charName;
-    //             }
-    //             return getAttr(n,t);
-    //         };
-
-    //         const getProp = (n, t) => {
-    //             switch(n){
-    //                 case 'token_name':
-    //                     return simpleToken.name;
-    //                 case 'character_name':
-    //                     return charName;
-    //                 case 'bar1':
-    //                 case 'bar2':
-    //                 case 'bar3':
-    //                         return simpleToken[`${n}_${'max'===t ? 'max' : 'value'}`];
-    //             }
-    //             return getFromChar(n,t);
-    //         };
-
-    //         if(name){
-    //             return getFromChar(name,type);
-    //         }
-    //         return getProp(name2,type);
-    //     };
-    //     return text.replace(attrRegExp, attrResolver);
-    // },
+        let pos = {x: tokenObj.get('left'), y: tokenObj.get('top')};
+        spawnFxBetweenPoints(pos, pos, fx, tokenObj.get('pageid'));
+    },
 
     
 //*************************************************************************************************************
