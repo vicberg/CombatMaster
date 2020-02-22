@@ -1,5 +1,5 @@
 /* 
- * Version 1.6.2 Alpha
+ * Version 1.7 Alpha
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.6.2 Alpha',
+	    version = '1.7 Alpha',
         timerObj,
         intervalHandle,
         debug = true,
@@ -542,7 +542,8 @@ var CombatMaster = CombatMaster || (function() {
             turnorder = state[combatState].config.turnorder;
 		    
 		listItems.push(makeTextButton('Sort Turnorder',turnorder.sortTurnOrder, '!cm --config,turnorder,key=sortTurnOrder,value='+!turnorder.sortTurnOrder + ' --show,turnorder'))
-    	listItems.push(makeTextButton('Center Map on Token', turnorder.centerToken, '!cm --config,turnorder,key=centerToken,value='+!turnorder.centerToken + ' --show,turnorder'))
+        listItems.push(makeTextButton('Center Map on Token', turnorder.centerToken, '!cm --config,turnorder,key=centerToken,value='+!turnorder.centerToken + ' --show,turnorder'))
+        listItems.push(makeTextButton('Use Marker',turnorder.useMarker, '!cm --config,turnorder,key=useMarker,value='+!turnorder.useMarker + ' --show,turnorder'))
     	listItems.push(makeTextButton('Marker Type',turnorder.markerType, '!cm --config,turnorder,key=markerType,value=?{Marker Type|External URL,External URL|Token Marker,Token Marker|Token Condition,Token Condition} --show,turnorder'))
         
         if (turnorder.markerType == 'External URL') {
@@ -1178,13 +1179,12 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         setTimeout(function() {
-            doTurnorderCalls()
+            doRoundCalls()
             doTurnorderChange()
         },500) 
     },
     
     stopCombat = function () {
-//        let tokenObj, statusmarkers
         if (debug) {
             log('Stop Combat')
         }
@@ -1489,7 +1489,9 @@ var CombatMaster = CombatMaster || (function() {
             if(marker.get('layer') === 'gmlayer') { 
                 marker.set(position);
                 setTimeout(() => {
-                    marker.set({ layer: 'objects' });
+                    if (state[combatState].config.turnorder.useMarker) {
+                        marker.set({ layer: 'objects' });
+                    }    
                 }, 500);
             } else { 
                 marker.set({ layer: 'gmlayer' });
@@ -1627,8 +1629,7 @@ var CombatMaster = CombatMaster || (function() {
         let prevTurnorder = (prev.turnorder === "") ? [] : JSON.parse(prev.turnorder);
 
         if(obj.get('turnorder') === "[]"){
-            resetMarker();
-            stopTimer();
+            stopCombat();
             return;
         }
 
@@ -2090,57 +2091,42 @@ var CombatMaster = CombatMaster || (function() {
 //*************************************************************************************************************
 //EXTERNAL CALLS 
 //*************************************************************************************************************
-    doTurnorderCalls = function () {
+    doRoundCalls = function () {
         if (debug) {
             log("Do Turnorder External Calls")
         }
         
         let config     = state[combatState].config.turnorder 
         let turnorder  = getTurnorder()
-        let tokenObj, characterObj, ability
+        let tokenObj, characterObj, macro
         
-//         turnorder.forEach((turn) => {
- 
-//             if (turn.id !== getOrCreateMarker().get('id')) {
-//                 tokenObj     = getObj('graphic',turn.id)
-//                 characterObj = getObj('character',tokenObj.get('represents'))
+        turnorder.forEach((turn) => {
+            if (turn.id !== getOrCreateMarker().get('id')) {
+                tokenObj     = getObj('graphic',turn.id)
+                characterObj = getObj('character',tokenObj.get('represents'))
 
-//                 if (characterObj) {
-//                     if (!['None',''].includes(config.allRoundMacro)) {
-//                         ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:config.turnMacro})[0]
-//                         if (ability) {
-//                             sendCalltoChat(tokenObj,characterObj,ability.get('action'))
-//                         } else {
-//                             ability = findObjs({_type:'macro', name:config.turnMacro})[0]
-//                             if (ability) {
-//                                 sendCalltoChat(tokenObj,characterObj,ability.get('action'))
-//                             }                    
-//                         }
-//                     }
-//                     log(config.characterRoundMacro)
-//                     log(characterObj.get('controlledby').length)
-//                     if (characterObj.get('controlledby').length > 1 && !['None',''].includes(config.characterRoundMacro)) {
-
-// //                         ability = findObjs({ _type:'macro', name:config.characterRoundMacro})[0]
-// //                         log(ability)
-// //                         if (ability) {
-// //                             content = macroResolver(tokenObj,characterObj)(ability.get('action')).replace(/\[\[\s+/g,'[[');
-// //                             log(content)
-// // //                            sendCalltoChat(tokenObj,characterObj,ability.get('action'))
-// //                         }   
-//                     }
-//                     // if (!['None',''].includes(config.roundAPI)) {
-//                     //     sendCalltoChat(tokenObj,characterObj,config.roundAPI)
-//                     // }
-//                     // if (!['None',''].includes(config.roundRoll20AM)) {
-//                     //     sendCalltoChat(tokenObj,characterObj,config.roundRoll20AM)
-//                     // }          
-//                     // if (!['None',''].includes(config.roundFX)) {
-//                     //     sendCalltoChat(tokenObj,characterObj,config.roundFX)
-//                     // }                     
-//                 }
-//             }
-//         });
+                if (characterObj) {
+                    if (!['None',''].includes(config.allRoundMacro)) {
+                        macro = getMacro(tokenObj, config.allRoundMacro)
+                        sendCalltoChat(tokenObj,characterObj,macro.get('action'))
+                    }
+                    log(characterObj.get('controlledby').length)
+                    if ( !['None',''].includes(config.characterRoundMacro) && characterObj.get('controlledby') != '') {
+                        macro = getMacro(tokenObj, config.characterRoundMacro)
+                        sendCalltoChat(tokenObj,characterObj,macro.get('action'))
+                    }
+                    if (!['None',''].includes(config.roundAPI)) {
+                        sendCalltoChat(tokenObj,characterObj,config.roundAPI)
+                    }
+                    if (!['None',''].includes(config.roundRoll20AM)) {
+                        sendCalltoChat(tokenObj,characterObj,config.roundRoll20AM)
+                    }          
+                    if (!['None',''].includes(config.roundFX)) {
+                        doFX(tokenObj,config.roundFX)
+                    }                     
+                }
+            }
+        });
     },
  
     doTurnCalls = function (tokenObj) {
@@ -2278,7 +2264,14 @@ var CombatMaster = CombatMaster || (function() {
         let pos = {x: tokenObj.get('left'), y: tokenObj.get('top')};
         spawnFxBetweenPoints(pos, pos, fx, tokenObj.get('pageid'));
     },
-
+    
+    getMacro = function(tokenObj, name) {
+        let macro = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:name})[0]
+        if (!action) {
+            macro = findObjs({_type:'macro', name:config.turnMacro})[0]
+        }    
+        return macro
+    },    
     
 //*************************************************************************************************************
 //SUBSTITUTIONS 
@@ -2479,6 +2472,7 @@ var CombatMaster = CombatMaster || (function() {
                     apiTargetTokens: 'None'				
 				},
                 turnorder: {
+                    useMarker: true,
 					markerType: 'External URL',
 					externalMarkerURL: 'https://s3.amazonaws.com/files.d20.io/images/52550079/U-3U950B3wk_KRtspSPyuw/thumb.png?1524507826',
 					nextMarkerType: 'External URL',
@@ -2888,9 +2882,12 @@ var CombatMaster = CombatMaster || (function() {
             if(!state[combatState].config.hasOwnProperty('turnorder')){
                 state[combatState].config.turnorder = combatDefaults.config.turnorder;
             } else {
+				if(!state[combatState].config.turnorder.hasOwnProperty('useMarker')){
+					state[combatState].config.turnorder.useMarker = combatDefaults.config.turnorder.useMarker;
+				}     
 				if(!state[combatState].config.turnorder.hasOwnProperty('markerType')){
 					state[combatState].config.turnorder.markerType = combatDefaults.config.turnorder.markerType;
-				}            
+				}  				
 				if(!state[combatState].config.turnorder.hasOwnProperty('externalMarkerURL')){
 					state[combatState].config.turnorder.externalMarkerURL = combatDefaults.config.turnorder.externalMarkerURL;
 				}
@@ -3232,6 +3229,8 @@ var CombatMaster = CombatMaster || (function() {
             notes += '<br>'
             notes += '<b>Sort Turnorder</b> will sort the turnorder in descending sequence (only) once created  <br>'
             notes += '<b>Center Map on Token</b> will center the map on the token currently active in the turnorder.<Kbr><i>Note: there was an issue where centering the map on a token on the GMLAYER was exposing tokens that the GM wanted to hide.  This has been fixed.</i><br>'
+            notes += '<b>Use Marker</b> determines if the marker is visible to players or always stays at the GM Layer<br>' 
+            
             notes += '<b>Marker Type</b> is set to External URL (default) or can be set to Token Marker.  If Token Marker is selected a suitable token must be uploaded to your game<br>' 
             notes += '<b>Marker</b> is a thumbnail of what will be used to highlight the current active player<br>' 
             notes += '<b>Use Next Marker</b> if set to true will display another marker around the player that is next in the turnorder.  If set to false, then the next player up is not highlighted<br>' 
