@@ -1,5 +1,5 @@
 /* 
- * Version 1.7 Alpha
+ * Version 1.7.1 Alpha
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.7 Alpha',
+	    version = '1.7.1 Alpha',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1020,15 +1020,12 @@ var CombatMaster = CombatMaster || (function() {
                 icon = newCondition.icon
             }
             
-            if (!defaultCondition.override) {
+            if (!duration) {
                 newCondition.duration = parseInt(defaultCondition.duration)
             } else {
-                if (!duration) {
-                    newCondition.duration = parseInt(defaultCondition.duration)
-                } else {
-                    newCondition.duration = parseInt(duration)
-                }    
-            }
+                newCondition.duration = parseInt(duration)
+            }   
+            
             if (!defaultCondition.override) {
                 newCondition.direction = parseInt(defaultCondition.direction)
             } else {
@@ -1932,6 +1929,9 @@ var CombatMaster = CombatMaster || (function() {
                         log('Condition:' + condition.key)
                         log('Duration:'  + condition.duration)
                         log('Direction:' + condition.direction)
+                        log('Delay:' + delay)
+                        log('Prev:' + prev)
+                        log('Show:' + show)
                     }            
                     
                     descriptionButton = makeButton(condition.name, '!cm --show,description,key='+condition.key) 
