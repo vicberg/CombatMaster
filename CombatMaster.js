@@ -1,5 +1,5 @@
 /* 
- * Version 1.6.1 Alpha
+ * Version 1.6.2 Alpha
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.6.1 Alpha',
+	    version = '1.6.2 Alpha',
         timerObj,
         intervalHandle,
         debug = true,
@@ -767,14 +767,15 @@ var CombatMaster = CombatMaster || (function() {
     },
     
     importConditions = function (config) {
+        
         let json, 
             backButton = makeBigButton('Back', '!cm --back,setup');
         
-        try{
+        // try{
             json = JSON.parse(config.replace('config=',''));
-            
             if (json.command == 'cm') {
-                state[combatState] = json
+                state[combatState].config = json
+                state[combatState].conditions = [];
                 setDefaults()
                 makeAndSendMenu('Current Combat Master detected and imported.' + backButton, 'Import Setup');
             }
@@ -783,15 +784,16 @@ var CombatMaster = CombatMaster || (function() {
                 setDefaults()
                 makeAndSendMenu('Prior Combat Tracker detected and conditions were imported.' + backButton, 'Import Setup');
             }
-        } catch(e) {
-            makeAndSendMenu('This is not a valid JSON string.' + backButton, 'Import Setup');
-            return;
-        }
+        // }
+        // } catch(e) {
+        //     makeAndSendMenu('This is not a valid JSON string.' + backButton, 'Import Setup');
+        //     return;
+        // }
     },
     
     exportConditions = function () {
         let backButton = makeBigButton('Back', '!cm --back,setup')
-        makeAndSendMenu('<p>Copy the entire content above and save it on your pc.</p><pre>'+HE(JSON.stringify(state[combatState].config))+'</pre><div>'+backButton+'/div>', 'Export Configs');
+        makeAndSendMenu('<p>Copy the entire content above and save it on your pc.</p><pre>'+HE(JSON.stringify(state[combatState].config))+'</pre><div>'+backButton+'</div>', 'Export Configs');
     },
 
 //*************************************************************************************************************
@@ -989,6 +991,10 @@ var CombatMaster = CombatMaster || (function() {
 
         if (debug) {
             log('Add Condition To Token')
+            log('Key:'+key)
+            log('Duration:' + duration)
+            log('Direction:' + direction)
+            log('Message:'+message)
         } 
 
         if (verifyCondition(tokenObj.get("_id"), key)) {
@@ -1217,7 +1223,7 @@ var CombatMaster = CombatMaster || (function() {
                 if (characterObj) {
                     whisper         = (tokenObj.get('layer') === 'gmlayer') ? 'gm ' : ''
                     initiativeRoll  = (initiative.initiativeDie) ? randomInteger(initiative.initiativeDie) : 0;
-                    initAttributes  = initiative.initiativeAttributes.split(';')
+                    initAttributes  = initiative.initiativeAttributes.split(',')
                     initiativeMod   = 0
 
                     initAttributes.forEach((attributes) => {
@@ -1530,6 +1536,7 @@ var CombatMaster = CombatMaster || (function() {
                         if(!condition) return;
                         if(marker !== '' && !newstatusmarkers.includes(marker)){
                             removeConditionFromToken(obj, condition.key);
+                            doRemoveConditionCalls(obj,condition.key)
                         }
                     })
                 }    
@@ -1540,6 +1547,7 @@ var CombatMaster = CombatMaster || (function() {
                         if(!condition) return;
                         if(marker !== "" && !prevstatusmarkers.includes(marker)){
                             addConditionToToken(obj,condition.key,condition.duration,condition.direction,condition.message);
+                            doAddConditionCalls(obj,condition.key)
                         }
                     });
                 }    
@@ -1939,6 +1947,7 @@ var CombatMaster = CombatMaster || (function() {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> removed.</div>';
                         if (!delay && !show) {
                             removeConditionFromToken(tokenObj, condition.key);  
+                            doRemoveConditionCalls(tokenObj,condition.key)
                             removed = true
                         }    
                     } else if (condition.duration > 0 && condition.direction != 0) {
@@ -2156,7 +2165,6 @@ var CombatMaster = CombatMaster || (function() {
                 }
             }
             for (key in state[combatState].conditions) {
-                log(state[combatState].conditions[key])
                 condition = state[combatState].conditions[key]
                 if (tokenObj.get('_id') == condition.id && condition.addPersistentMacro) {
                     ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addMacro})[0]
@@ -2882,6 +2890,7 @@ var CombatMaster = CombatMaster || (function() {
             },
         };
 
+        
         if(!state[combatState].config || typeof state[combatState].config == 'undefined' || reset) {
             state[combatState].config = combatDefaults.config;
         } else {
@@ -3059,7 +3068,7 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         if(!state[combatState].hasOwnProperty('conditions')){
-            state[combatState].conditions = combatDefaults.conditions;
+            state[combatState].conditions = [];
         } 
 
         if(state[combatState].config.hasOwnProperty('conditions') && !reset){        
