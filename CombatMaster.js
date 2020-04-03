@@ -1,5 +1,5 @@
 /* 
- * Version 2.03
+ * Version 2.04
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.03',
+	    version = '2.04',
         timerObj,
         intervalHandle,
         debug = true,
@@ -2025,32 +2025,35 @@ var CombatMaster = CombatMaster || (function() {
         
         contents += conditions
         
-        let characterObj = getObj('character', tokenObj.get('represents'))  
-        let controlledBy = characterObj.get('controlledby')
-        let players      = controlledBy.split(",")        
+        let characterObj = getObj('character', tokenObj.get('represents')) 
 
-        if (characterObj && state[combatState].config.status.userChanges) {
-            if (players.length > 1) {
-                let playerObj, displayName
-                players.forEach((playerID) => {
-                    playerObj = getObj('player', playerID)
-                    if (playerObj) {
-                        displayName = playerObj.get('displayname')
-                        sendMainMenu(displayName)
-                    }    
-                })
-            }            
-        }   
-
-        if (characterObj && state[combatState].config.announcements.announceTurn) {
-            let target
-            if (players[0] != "") {
-                target = (state[combatState].config.announcements.whisperToGM) ? 'gm' : ''
-            } else {
-                target = (!state[combatState].config.announcements.showNPCTurns) ? 'gm' : ''
-            }    
-            makeAndSendMenu(contents,title,target);
-        }   
+        if (characterObj) {
+            let controlledBy = characterObj.get('controlledby')
+            let players      = controlledBy.split(",")        
+        
+            if (state[combatState].config.status.userChanges) {
+                if (players.length > 1) {
+                    let playerObj, displayName
+                    players.forEach((playerID) => {
+                        playerObj = getObj('player', playerID)
+                        if (playerObj) {
+                            displayName = playerObj.get('displayname')
+                            sendMainMenu(displayName)
+                        }    
+                    })
+                }            
+            }   
+            
+            if (state[combatState].config.announcements.announceTurn) {
+                let target
+                if (players[0] != "") {
+                    target = (state[combatState].config.announcements.whisperToGM) ? 'gm' : ''
+                } else {
+                    target = (!state[combatState].config.announcements.showNPCTurns) ? 'gm' : ''
+                }    
+                makeAndSendMenu(contents,title,target);
+            }   
+        }
     },
 
     getAnnounceConditions = function (tokenObj, prev, delay, show) {
@@ -2540,19 +2543,18 @@ var CombatMaster = CombatMaster || (function() {
     },
 
     handleGraphicMovement = function (obj /*, prev */) {
-        let turnID, objID
         if (debug) {
             log ('Handle Graphic Movement')
         } 
  
         if(!inFight()) return;
+        
+        let turnorder =  getTurnorder()
 
-        if (obj.hasOwnProperty("id")) {
-            if (getCurrentTurn().id && obj.get('id')) {
-                if(getCurrentTurn().id === obj.get('id')){
-                    changeMarker(obj);
-                }
-            }   
+        if (obj.hasOwnProperty("id") && turnorder.length > 0) {
+            if(getCurrentTurn().id === obj.get('id')){
+                changeMarker(obj);
+            }
         }    
     },
 
