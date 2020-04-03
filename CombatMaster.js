@@ -1,5 +1,5 @@
 /* 
- * Version 2.02
+ * Version 2.03
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,10 +11,10 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.02',
+	    version = '2.03',
         timerObj,
         intervalHandle,
-        debug = false,
+        debug = true,
         rotationInterval,
         paused = false,
         who = 'gm',
@@ -1078,8 +1078,8 @@ var CombatMaster = CombatMaster || (function() {
             if (newCondition.iconType) {
                 icon = getIconTag(newCondition.iconType, newCondition.icon)
             }
-            
-            if (!icon) {
+
+            if (newCondition.iconType == 'Token Condition') {
                 let characterObj = findObjs({name: newCondition.icon, _type: 'character'})[0];
                 characterObj.get("defaulttoken", function(defaulttoken) {
 
@@ -2237,10 +2237,11 @@ var CombatMaster = CombatMaster || (function() {
             return
         }
         
+        
         let iconTag = null
         if (iconType == 'Token Marker') {
             iconTag = libTokenMarkers.getStatus(iconName).getTag()
-        } else if (newCondition.iconType == 'Combat Master') {
+        } else if (iconType == 'Combat Master') {
             iconTag = iconName
         }    
         
