@@ -14,7 +14,7 @@ var CombatMaster = CombatMaster || (function() {
 	    version = '2.01',
         timerObj,
         intervalHandle,
-        debug = true,
+        debug = false,
         rotationInterval,
         paused = false,
         who = 'gm',
