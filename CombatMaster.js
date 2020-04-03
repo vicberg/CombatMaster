@@ -1,5 +1,5 @@
 /* 
- * Version 2.01
+ * Version 2.02
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,10 +11,10 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.01',
+	    version = '2.02',
         timerObj,
         intervalHandle,
-        debug = false,
+        debug = true,
         rotationInterval,
         paused = false,
         who = 'gm',
@@ -1712,7 +1712,7 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         if (turn.id === '-1') { 
-            doTurnorderCalls()
+            doRoundCalls()
             nextTurn();
             return;
         }
