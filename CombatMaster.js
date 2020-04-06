@@ -1,5 +1,5 @@
 /* 
- * Version 2.04
+ * Version 2.05
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.04',
+	    version = '2.05',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1027,8 +1027,9 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         if (cmdDetails.details.id) {
-            removeConditionFromToken(getObj('graphic', cmdDetails.details.id), cmdDetails.details.condition)  
-            doRemoveConditionCalls(getObj(token._type, token._id),cmdDetails.details.condition)
+            let token = getObj('graphic', cmdDetails.details.id)
+            removeConditionFromToken(token, cmdDetails.details.condition)  
+            doRemoveConditionCalls(token,cmdDetails.details.condition)
         } else if (selectedTokens) {
         	selectedTokens.forEach(token => {
         	    if (token._type == 'graphic') {
@@ -1178,14 +1179,14 @@ var CombatMaster = CombatMaster || (function() {
                             condition.target.forEach((target, j) => {
                                 if (icon) {
                                     removeMarker(getObj('graphic', target),icon)
-                                } else {
+                                } else if (condition.iconType == 'Token Condition') {
                                     removeTokenCondition(condition.tokenConditionID)
                                 }    
                             })    
                         }
                         if (icon) {            
                             removeMarker(tokenObj,icon)
-                        } else {
+                        } else if (condition.iconType == 'Token Condition') {
                             removeTokenCondition(condition.tokenConditionID)
                         }                            
                         state[combatState].conditions.splice(i,1)
@@ -2077,7 +2078,7 @@ var CombatMaster = CombatMaster || (function() {
                         log('Prev:'      + prev)
                         log('Show:'      + show)
                     }            
-                    
+                    log(condition)
                     descriptionButton = makeButton(condition.name, '!cmaster --show,description,key='+condition.key) 
                     
                     if (!delay && !show) {
