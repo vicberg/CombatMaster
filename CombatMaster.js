@@ -1,5 +1,5 @@
 /* 
- * Version 2.06
+ * Version 2.07
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.06',
+	    version = '2.07',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1281,16 +1281,17 @@ var CombatMaster = CombatMaster || (function() {
         
     				if (!characterObj) {
                          makeAndSendMenu('A token was found not assigned to a character sheet',' ', whisper);   
-                    } else {  
-                        initAttributes  = initiative.initiativeAttributes.split(';')
-                        log(initAttributes)
-                        initAttributes.forEach((attributes) => {
-                            attribute  = getAttrByName(characterObj.id,attributes,'current') 
-                            if (!attribute) {
-                                makeAndSendMenu('Initiative Attribute ' + attributes + ' not found on character sheet',' ', whisper);  
-                            }                       
-                        })
-                    }    
+                    } 
+                    // else {  
+                    //     initAttributes  = initiative.initiativeAttributes.split(';')
+                    //     log(initAttributes)
+                    //     initAttributes.forEach((attributes) => {
+                    //         attribute  = getAttrByName(characterObj.id,attributes,'current') 
+                    //         if (!attribute) {
+                    //             makeAndSendMenu('Initiative Attribute ' + attributes + ' not found on character sheet',' ', whisper);  
+                    //         }                       
+                    //     })
+                    // }    
                 }    
 			})    
         }  
@@ -1970,7 +1971,7 @@ var CombatMaster = CombatMaster || (function() {
         intervalHandle = setInterval(() => {
             if(paused) return;
 
-            if(timerObj) timerObj.set({
+            if(timerObj && timer.showTokenTimer) timerObj.set({
                 top: token.get('top')+token.get('width')/2+40,
                 left: token.get('left'),
                 text: 'Timer: ' + time,
