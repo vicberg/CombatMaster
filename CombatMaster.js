@@ -1,5 +1,5 @@
 /* 
- * Version 2.05
+ * Version 2.06
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.05',
+	    version = '2.06',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1174,16 +1174,18 @@ var CombatMaster = CombatMaster || (function() {
                     if (condition.key == key) {
                         if (condition.iconType) {
                             icon = getIconTag(condition.iconType, condition.icon)
-                        }                          
-                        if (condition.target.length > 0) {
-                            condition.target.forEach((target, j) => {
-                                if (icon) {
-                                    removeMarker(getObj('graphic', target),icon)
-                                } else if (condition.iconType == 'Token Condition') {
-                                    removeTokenCondition(condition.tokenConditionID)
-                                }    
-                            })    
-                        }
+                        }           
+                        if (condition.hasOwnProperty('target')) {
+                            if (condition.target.length > 0) {
+                                condition.target.forEach((target, j) => {
+                                    if (icon) {
+                                        removeMarker(getObj('graphic', target),icon)
+                                    } else if (condition.iconType == 'Token Condition') {
+                                        removeTokenCondition(condition.tokenConditionID)
+                                    }    
+                                })    
+                            }
+                        }    
                         if (icon) {            
                             removeMarker(tokenObj,icon)
                         } else if (condition.iconType == 'Token Condition') {
@@ -1213,7 +1215,10 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         let condition = getConditionByKey(key)
-        let icon      = getDefaultIcon(condition.iconType,condition.icon, 'margin-right: 5px; margin-top: 5px; display: inline-block;');
+        let icon
+        if (['Combat Master','Token Marker'].includes(condition.iconType)) {
+            icon  = getDefaultIcon(condition.iconType,condition.icon, 'margin-right: 5px; margin-top: 5px; display: inline-block;');
+        }    
         makeAndSendMenu(condition.description,icon+condition.name,(state[combatState].config.status.sendOnlyToGM) ? 'gm' : '');
     },
   
@@ -1480,7 +1485,7 @@ var CombatMaster = CombatMaster || (function() {
         } else {
             statusmarkers = []
         } 
-        
+        log(statusmarkers)
         if (duration) {
             statusmarker = marker+'@'+duration
         } else {
@@ -1488,8 +1493,10 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         [...statusmarkers].forEach((a, i) => {
+            log(a.indexOf(marker))
+            
             if (a.indexOf(marker) > -1) {
-                statusmarkers.splice(i,0,statusmarker)
+                statusmarkers.splice(i,0)
                 exists = true
             }        
         });        
@@ -3448,7 +3455,7 @@ var CombatMaster = CombatMaster || (function() {
         }
         setDefaults();
         buildHelp();
-        log(script_name + ' Ready! Command: !'+state[combatState].config.command);
+        log(script_name + ' Ready! Command: !cmaster --main');
     },    
     
     registerEventHandlers = function() {
@@ -3459,12 +3466,6 @@ var CombatMaster = CombatMaster || (function() {
         on('change:graphic:top', handleGraphicMovement);
         on('change:graphic:left', handleGraphicMovement);
         on('change:graphic:layer', handleGraphicMovement);
-        
-        if('undefined' !== typeof API && API.ObserveTokenChange){
-            API.ObserveTokenChange(function(obj,prev) {
-                handleStatusMarkerChange(obj,prev);
-            });
-        }
 
         if('undefined' !== typeof DeathTracker && DeathTracker.ObserveTokenChange){
             DeathTracker.ObserveTokenChange(function(obj,prev) {
@@ -3477,6 +3478,12 @@ var CombatMaster = CombatMaster || (function() {
                 handleStatusMarkerChange(obj,prev);
             });
         }
+        
+        if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange) {             
+            TokenMod.ObserveTokenChange(function(obj,prev) {
+                handleStatusMarkerChange(obj,prev);
+            });    
+        }       
     };
     
     return {
