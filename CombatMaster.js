@@ -1,5 +1,5 @@
 /* 
- * Version 2.10
+ * Version 2.11
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.10',
+	    version = '2.11',
         timerObj,
         intervalHandle,
         debug = true,
@@ -3144,22 +3144,22 @@ var CombatMaster = CombatMaster || (function() {
 			if(!state[combatState].config.hasOwnProperty('previousPage')){
 				state[combatState].config.previousPage = combatDefaults.config.previousPage;
 			}  
-            // if(!state[combatState].config.hasOwnProperty('hold')){
-            //     state[combatState].config.hold = combatDefaults.config.hold;
-            // } else {
-            //     if(!state[combatState].config.hold.hasOwnProperty('held')){
-            //         state[combatState].config.hold.held = combatDefaults.config.hold.held;    
-            //     }                 
-            //     if(!state[combatState].config.hold.hasOwnProperty('turnorder')){
-            //         state[combatState].config.hold.turnorder = combatDefaults.config.hold.turnorder;    
-            //     }  
-            //     if(!state[combatState].config.hold.hasOwnProperty('conditions')){
-            //         state[combatState].config.hold.conditions = combatDefaults.config.hold.conditions;    
-            //     }    
-            //     if(!state[combatState].config.hold.hasOwnProperty('round')){
-            //         state[combatState].config.hold.round = combatDefaults.config.hold.round;    
-            //     }                    
-            // }				
+            if(!state[combatState].config.hasOwnProperty('hold')){
+                state[combatState].config.hold = combatDefaults.config.hold;
+            } else {
+                if(!state[combatState].config.hold.hasOwnProperty('held')){
+                    state[combatState].config.hold.held = combatDefaults.config.hold.held;    
+                }                 
+                if(!state[combatState].config.hold.hasOwnProperty('turnorder')){
+                    state[combatState].config.hold.turnorder = combatDefaults.config.hold.turnorder;    
+                }  
+                if(!state[combatState].config.hold.hasOwnProperty('conditions')){
+                    state[combatState].config.hold.conditions = combatDefaults.config.hold.conditions;    
+                }    
+                if(!state[combatState].config.hold.hasOwnProperty('round')){
+                    state[combatState].config.hold.round = combatDefaults.config.hold.round;    
+                }                    
+            }				
             if(!state[combatState].config.hasOwnProperty('initiative')){
                 state[combatState].config.initiative = combatDefaults.config.initiative;
             } else {		
