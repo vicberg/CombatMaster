@@ -98,7 +98,7 @@ var CombatMaster = CombatMaster || (function() {
     icon_image_positions = {red:"#C91010",blue:"#1076C9",green:"#2FC910",brown:"#C97310",purple:"#9510C9",pink:"#EB75E1",yellow:"#E5EB75",dead:"X",skull:0,sleepy:34,"half-heart":68,"half-haze":102,interdiction:136,snail:170,"lightning-helix":204,spanner:238,"chained-heart":272,"chemical-bolt":306,"death-zone":340,"drink-me":374,"edge-crack":408,"ninja-mask":442,stopwatch:476,"fishing-net":510,overdrive:544,strong:578,fist:612,padlock:646,"three-leaves":680,"fluffy-wing":714,pummeled:748,tread:782,arrowed:816,aura:850,"back-pain":884,"black-flag":918,"bleeding-eye":952,"bolt-shield":986,"broken-heart":1020,cobweb:1054,"broken-shield":1088,"flying-flag":1122,radioactive:1156,trophy:1190,"broken-skull":1224,"frozen-orb":1258,"rolling-bomb":1292,"white-tower":1326,grab:1360,screaming:1394,grenade:1428,"sentry-gun":1462,"all-for-one":1496,"angel-outfit":1530,"archery-target":1564},
     ctMarkers = ['blue', 'brown', 'green', 'pink', 'purple', 'red', 'yellow', '-', 'all-for-one', 'angel-outfit', 'archery-target', 'arrowed', 'aura', 'back-pain', 'black-flag', 'bleeding-eye', 'bolt-shield', 'broken-heart', 'broken-shield', 'broken-skull', 'chained-heart', 'chemical-bolt', 'cobweb', 'dead', 'death-zone', 'drink-me', 'edge-crack', 'fishing-net', 'fist', 'fluffy-wing', 'flying-flag', 'frozen-orb', 'grab', 'grenade', 'half-haze', 'half-heart', 'interdiction', 'lightning-helix', 'ninja-mask', 'overdrive', 'padlock', 'pummeled', 'radioactive', 'rolling-bomb', 'screaming', 'sentry-gun', 'skull', 'sleepy', 'snail', 'spanner',   'stopwatch','strong', 'three-leaves', 'tread', 'trophy', 'white-tower'],
     shaped_conditions = ['blinded', 'charmed', 'deafened', 'frightened', 'grappled', 'incapacitated', 'invisible', 'paralyzed', 'petrified', 'poisoned', 'prone', 'restrained', 'stunned', 'unconscious'],
-	
+
     script_name = 'CombatMaster',
     combatState = 'COMBATMASTER',
 
@@ -189,7 +189,7 @@ var CombatMaster = CombatMaster || (function() {
 
         //split additional command actions
 	    _.each(String(tokens).replace(cmdSep.action+',','').split(','),(d) => {
-            vars=d.match(/(who|next|main|previous|delay|start|stop|hold|timer|pause|show|all|favorites|setup|conditions|condition|sort|combat|turnorder|accouncements|timer|macro|status|list|export|import|type|key|value|setup|tracker|confirm|direction|duration|message|initiative|config|assigned|type|action|description|target|id|)(?:\:|=)([^,]+)/) || null;
+            vars=d.match(/(who|next|main|previous|delay|start|stop|hold|timer|pause|show|all|favorites|setup|conditions|condition|sort|combat|turnorder|accouncements|timer|macro|status|list|export|import|type|key|value|setup|tracker|confirm|direction|duration|message|initiative|config|assigned|type|action|description|target|id|started|stopped|held|)(?:\:|=)([^,]+)/) || null;
             if(vars) {
                 if (vars[2].includes('INDEX')) {
                     let key, result, temp
@@ -383,11 +383,9 @@ var CombatMaster = CombatMaster || (function() {
 			setDefaults(true);
 			sendMainMenu(who)
         }
-        // if (cmdDetails.action == 'help') {
-        //     if (cmdDetails.details.main) {
-    		  //  buildHelpMain()
-        //     }    
-        // }        
+        if (cmdDetails.action == 'help') {
+    		showHelp(cmdDetails)
+        }        
 	},
 
 //*************************************************************************************************************
@@ -410,7 +408,14 @@ var CombatMaster = CombatMaster || (function() {
         let configButton        = makeImageButton('!cmaster --show,setup',backImage,'Show Setup','transparent',18)
         let showButton          = makeImageButton('!cmaster --show,assigned',showImage,'Show Conditions','transparent',18)
         let sortButton          = makeImageButton('!cmaster --turn,sort',sortImage,'Sort Turnorder','transparent',18)
-        let helpButton          = makeImageButton('!cmaster --help,main',helpImage,'Help','transparent',18,'white')
+        let helpButton
+        if (state[combatState].config.hold.held) {
+            helpButton          = makeImageButton('!cmaster --help,held',helpImage,'Help','transparent',18,'white')
+        } else if (inFight() ) { 
+            helpButton          = makeImageButton('!cmaster --help,started',helpImage,'Help','transparent',18,'white')
+        } else {
+            helpButton          = makeImageButton('!cmaster --help,stopped',helpImage,'Help','transparent',18,'white')
+        }    
         let listItems           = []
         let titleText           = 'CombatMaster Menu<span style="'+styles.version+'"> ('+version+')</span>'+'<span style='+styles.buttonRight+'>'+helpButton+'</span>'
         let contents, key, condition, conditions, conditionButton, addButton, removeButton, favoriteButton, listContents, rowCount=1;
@@ -3417,6 +3422,39 @@ var CombatMaster = CombatMaster || (function() {
         }
     },
 
+    showHelp = function(cmdDetails) {
+        let handout
+        let title
+        if (cmdDetails.details.held) {
+            title = 'Main Menu Held'
+        } else if (cmdDetails.details.started) {
+            title = 'Main Menu Started'
+        } else if (cmdDetails.details.stopped) {
+            title = 'Main Menu Stopped'
+        } else if (cmdDetails.details.setup) {
+            title = 'Setup Menu'
+        } else if (cmdDetails.details.initiative) {
+            title = 'Initiative Menu'
+        } else if (cmdDetails.details.turnorder) {
+            title = 'Turnorder Menu'
+        } else if (cmdDetails.details.timer) {
+            title = 'Timer Menu'
+        } else if (cmdDetails.details.announcements) {
+            title = 'Announcements Menu'
+        } else if (cmdDetails.details.macro) {
+            title = 'Macro & API Menu'
+        } else if (cmdDetails.details.status) {
+            title = 'Status Menu'
+        } else if (cmdDetails.details.conditions) {
+            title = 'Conditions Menu'
+        } else if (cmdDetails.details.conditions) {
+            title = 'Condition Menu'
+        } 
+        handout = findHandout(title) 
+        log(handout)
+        makeAndSendMenu(`<a href="http://journal.roll20.net/handout/${handout[0].id}">View Help</a>`,title,'gm')         
+    },
+    
     buildHelp = function() {
         log('Building Help')
         
@@ -3451,8 +3489,14 @@ var CombatMaster = CombatMaster || (function() {
         
     },
     
-    createHandout = function (title) {
+    findHandout = function (title) {
         let handout = findObjs({_type:'handout', name:title})
+        
+        return handout
+    },
+    
+    createHandout = function (title) {
+        let handout = findHandout(title)
 
         if (handout[0]) {
             handout[0].remove()
@@ -3460,11 +3504,11 @@ var CombatMaster = CombatMaster || (function() {
         
         handout   = createObj('handout', {
                         name:title,
-                        archived:false
+                        archived:true
                     })
         
         return handout            
-//        makeAndSendMenu(`<a href="http://journal.roll20.net/handout/${handout.id}">View Help</a>`,title,'gm')                  
+                
 
     },
 
@@ -3597,7 +3641,6 @@ var CombatMaster = CombatMaster || (function() {
     },   
 
     buildInitiativeMenu = function(handout,setupID) {
-        log(setupID)
         let notes = `<div class="content note-editor notes">
                         <p>
                             <img src="https://s3.amazonaws.com/files.d20.io/images/102628957/Q8hJ5W9htatgAvhx5n8THw/original.png?15798733525">
