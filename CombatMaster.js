@@ -1,5 +1,5 @@
 /* 
- * Version 2.13
+ * Version 2.14
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.13',
+	    version = '2.14',
         timerObj,
         intervalHandle,
         debug = true,
@@ -535,7 +535,7 @@ var CombatMaster = CombatMaster || (function() {
 		let	titleText                   = 'Setup'+'<span style='+styles.buttonRight+'>'+helpButton+'</span>'
 		let	combatHeaderText            = '<div style="'+styles.header+'">Combat Setup</div>'
 		let	statusHeadersText           = '<div style="'+styles.header+'">Status Setup</div>'
-		let	resetHeaderText             = '<div style="'+styles.header+'">Reset CombatTracker</div>'	
+		let	resetHeaderText             = '<div style="'+styles.header+'">Reset CombatMaster</div>'	
 		let	backToTrackerText           = '<div style="'+styles.header+'">Return</div>'	
 		let contents	
 		
@@ -3446,7 +3446,7 @@ var CombatMaster = CombatMaster || (function() {
             title = 'Status Menu'
         } else if (cmdDetails.details.conditions) {
             title = 'Conditions Menu'
-        } else if (cmdDetails.details.conditions) {
+        } else if (cmdDetails.details.condition) {
             title = 'Condition Menu'
         } 
         handout = findHandout(title) 
@@ -3628,7 +3628,7 @@ var CombatMaster = CombatMaster || (function() {
                             </ul>
                         </ul>
                         <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/133813360/-mvW-R8Xn8KAKHS327RQ-w/original.png?15892986575">
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/134864903/rJ_Csa1GWTo_hwlNykRyIA/original.png?15895760375">
                         </p>                        
                         <ul>
                             <li><b>Reset CombatMaster </b>— This resets the entire session state. It defaults the conditions to D&amp;D 5e.<br></li>
