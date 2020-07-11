@@ -1,5 +1,5 @@
 /* 
- * Version 2.15
+ * Version 2.16
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.15',
+	    version = '2.16',
         timerObj,
         intervalHandle,
         debug = true,
@@ -104,23 +104,22 @@ var CombatMaster = CombatMaster || (function() {
 
     inputHandler = function(msg_orig) {
 
-        let status = state[combatState].config.status
-        if (status.autoAddSpells) {
-            if (status.sheet == 'OGL') {
-                if (msg_orig && msg_orig.rolltemplate && msg_orig.rolltemplate === 'spell') {
-                    handleSpellCast(msg_orig)
-                }
-            } else if (status.sheet == 'Shaped')  {
-                if (msg_orig && msg.content.includes("{{spell=1}}")) {
-                    handleSpellCast(msg_orig)
-                }              
-            } 
-        }
-
         if (msg_orig.content.indexOf('!cmaster')!==0) {
+            let status = state[combatState].config.status
+            if (status.autoAddSpells) {
+                if (status.sheet == 'OGL') {
+                    if (msg_orig && msg_orig.rolltemplate && msg_orig.rolltemplate === 'spell') {
+                        handleSpellCast(msg_orig)
+                    }
+                } else if (status.sheet == 'Shaped')  {
+                    if (msg_orig && mmsg_orig.content.includes("{{spell=1}}")) {
+                        handleSpellCast(msg_orig)
+                    }              
+                } 
+            }
             return;
-        }
-        
+        }    
+
         log(msg_orig)
         
         var msg = _.clone(msg_orig),args,restrict,player
@@ -750,7 +749,7 @@ var CombatMaster = CombatMaster || (function() {
 		]	
 
         if (status.autoAddSpells) {
-            listItems.push(makeTextButton('Sheet', status.sheet, '!cmaster --config,status,key=sheet,value=?{Sheet|D&D5E OGL,OGL|D&D5E Shaped,Shaped} --show,status'))
+            listItems.push(makeTextButton('Sheet', status.sheet, '!cmaster --config,status,key=sheet,value=?{Sheet|5E OGL,OGL|5E Shaped,Shaped}'))
         }
         
 		makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');	
