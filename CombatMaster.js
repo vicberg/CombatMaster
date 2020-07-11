@@ -1,5 +1,5 @@
 /* 
- * Version 2.16
+ * Version 2.17
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.16',
+	    version = '2.17',
         timerObj,
         intervalHandle,
         debug = true,
@@ -104,22 +104,23 @@ var CombatMaster = CombatMaster || (function() {
 
     inputHandler = function(msg_orig) {
 
-        if (msg_orig.content.indexOf('!cmaster')!==0) {
-            let status = state[combatState].config.status
-            if (status.autoAddSpells) {
-                if (status.sheet == 'OGL') {
-                    if (msg_orig && msg_orig.rolltemplate && msg_orig.rolltemplate === 'spell') {
-                        handleSpellCast(msg_orig)
-                    }
-                } else if (status.sheet == 'Shaped')  {
-                    if (msg_orig && mmsg_orig.content.includes("{{spell=1}}")) {
-                        handleSpellCast(msg_orig)
-                    }              
-                } 
-            }
-            return;
-        }    
+        let status = state[combatState].config.status
+        if (status.autoAddSpells) {
+            if (status.sheet == 'OGL') {
+                if (msg_orig && msg_orig.rolltemplate && msg_orig.rolltemplate === 'spell') {
+                    handleSpellCast(msg_orig)
+                }
+            } else if (status.sheet == 'Shaped')  {
+                if (msg_orig && msg_orig.content.includes("{{spell=1}}")) {
+                    handleSpellCast(msg_orig)
+                }              
+            } 
+        }
 
+        if (msg_orig.content.indexOf('!cmaster')!==0) {
+            return;
+        }
+        
         log(msg_orig)
         
         var msg = _.clone(msg_orig),args,restrict,player
@@ -195,7 +196,7 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         //find the action and set the cmdSep Action
-	    cmdSep.action = String(tokens).match(/turn|show|config|back|reset|main|remove|add|new|delete|import|export|help|spell|ignore/);
+	    cmdSep.action = String(tokens).match(/turn|show|config|back|reset|main|remove|add|new|delete|import|export|help|spell|ignore|clear/);
         //the ./ is an escape within the URL so the hyperlink works.  Remove it
         cmd.replace('./', '');
 
@@ -424,12 +425,29 @@ var CombatMaster = CombatMaster || (function() {
         if (cmdDetails.action == 'ignore') {
 			state[combatState].ignores = [];
 			sendMainMenu(who)
-        }        
+        }  
+        if (cmdDetails.action == 'clear') {
+			clearTokenStatuses(msg.selected)
+			sendMainMenu(who)
+        }          
         if (cmdDetails.action == 'help') {
     		showHelp(cmdDetails)
         }        
 	},
 
+    clearTokenStatuses = function(selectedTokens) {
+        let tokenObj
+        selectedTokens.forEach(token => {    
+            if (token._type == 'graphic') {
+                tokenObj        = getObj('graphic', token._id)    
+                if (tokenObj) {
+                    tokenObj.set('statusmarkers', "")
+                    log(tokenObj)
+                }
+            }
+        })    
+    },
+    
 //*************************************************************************************************************
 //MENUS
 //*************************************************************************************************************
@@ -575,6 +593,7 @@ var CombatMaster = CombatMaster || (function() {
 		let	importButton                = makeBigButton('Import', '!cmaster --import,config=?{Config}')	
 		let	resetButton                 = makeBigButton('Reset', '!cmaster --reset')
 		let	ignoreButton                = makeBigButton('Remove Ignores', '!cmaster --ignore')
+		let	clearButton                 = makeBigButton('Clear Token Statuses', '!cmaster --clear')
 		let helpButton                  = makeImageButton('!cmaster --help,setup',helpImage,'Help','transparent',18,'white')
 		let	backToTrackerButton         = makeBigButton('Back', '!cmaster --back,tracker')
 		let	titleText                   = 'Setup'+'<span style='+styles.buttonRight+'>'+helpButton+'</span>'
@@ -599,6 +618,7 @@ var CombatMaster = CombatMaster || (function() {
 		contents += resetHeaderText
 		contents += resetButton
 		contents += ignoreButton
+		contents += clearButton
 	    contents += backToTrackerText
 	    contents += backToTrackerButton
 
@@ -749,7 +769,7 @@ var CombatMaster = CombatMaster || (function() {
 		]	
 
         if (status.autoAddSpells) {
-            listItems.push(makeTextButton('Sheet', status.sheet, '!cmaster --config,status,key=sheet,value=?{Sheet|5E OGL,OGL|5E Shaped,Shaped} --show,status'))
+            listItems.push(makeTextButton('Sheet', status.sheet, '!cmaster --config,status,key=sheet,value=?{Sheet|D&D5E OGL,OGL|D&D5E Shaped,Shaped} --show,status'))
         }
         
 		makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');	
@@ -1715,6 +1735,7 @@ var CombatMaster = CombatMaster || (function() {
         });       
 
         tokenObj.set('statusmarkers', statusmarkers.join())
+        log(tokenObj)
         
     },
     
@@ -2217,7 +2238,7 @@ var CombatMaster = CombatMaster || (function() {
         let image       = (imgurl) ? '<img src="'+imgurl+'" width="50px" height="50px"  />' : ''
         name            = (state[combatState].config.announcements.handleLongName) ? handleLongString(name) : name
         
-        let title         = 'Next Player Up'
+        let title         = 'Conditions'
         let doneButton    = makeImageButton('!cmaster --turn,next',doneImage,'Done with Round','transparent',18,'white')
         let delayButton   = makeImageButton('!cmaster --turn,delay',delayImage,'Delay your Turn','transparent',18, 'white');
         
@@ -2788,13 +2809,13 @@ var CombatMaster = CombatMaster || (function() {
             }
         }
 
-        if (concentration.useConcentration && concentrate == true)   {     
+        if (concentration.useConcentration && concentrate == true) {     
             let characterName   = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);            
             characterName       = RegExp.$1;
             log (characterName)
             let characterID     = findObjs({ name: characterName, _type: 'character' }).shift().get('id')    
             log(characterID)
-            let tokenObj        = findObjs({ represents: characterID, _type: 'graphic' })[0]
+            let tokenObj        = findObjs({ represents: characterID, _pageid:Campaign().get("playerpageid"), _type: 'graphic' })[0]
             log(tokenObj)
             addConditionToToken(tokenObj,'concentration',1,0,'Concentrating on ' + spellName)
         }   
