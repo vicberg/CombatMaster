@@ -749,7 +749,7 @@ var CombatMaster = CombatMaster || (function() {
 		]	
 
         if (status.autoAddSpells) {
-            listItems.push(makeTextButton('Sheet', status.sheet, '!cmaster --config,status,key=sheet,value=?{Sheet|5E OGL,OGL|5E Shaped,Shaped}'))
+            listItems.push(makeTextButton('Sheet', status.sheet, '!cmaster --config,status,key=sheet,value=?{Sheet|5E OGL,OGL|5E Shaped,Shaped} --show,status'))
         }
         
 		makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');	
