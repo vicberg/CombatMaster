@@ -1,5 +1,5 @@
 /* 
- * Version 2.17
+ * Version 2.18
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.17',
+	    version = '2.18',
         timerObj,
         intervalHandle,
         debug = true,
@@ -55,7 +55,9 @@ var CombatMaster = CombatMaster || (function() {
         delayImage = '}',
         sortConditionsImage = '0',
         holdImage = 'L',
-        helpImage = 'i';
+        helpImage = 'i',
+        conditionsImage = ':',
+        spellsImage = 'C';
         
     //Styling for the chat responses.
     const styles = {
@@ -104,10 +106,11 @@ var CombatMaster = CombatMaster || (function() {
 
     inputHandler = function(msg_orig) {
 
+        log(msg_orig)
         let status = state[combatState].config.status
         if (status.autoAddSpells) {
             if (status.sheet == 'OGL') {
-                if (msg_orig && msg_orig.rolltemplate && msg_orig.rolltemplate === 'spell') {
+                if (msg_orig && (msg_orig.rolltemplate && msg_orig.rolltemplate === 'spell') || msg_orig.content.includes('{{spelllevel=')) {
                     handleSpellCast(msg_orig)
                 }
             } else if (status.sheet == 'Shaped')  {
@@ -202,7 +205,7 @@ var CombatMaster = CombatMaster || (function() {
 
         //split additional command actions
 	    _.each(String(tokens).replace(cmdSep.action+',','').split(','),(d) => {
-            vars=d.match(/(who|next|main|previous|delay|start|stop|hold|timer|pause|show|all|favorites|setup|conditions|condition|sort|combat|turnorder|accouncements|timer|macro|status|list|export|import|type|key|value|setup|tracker|confirm|direction|duration|message|initiative|config|assigned|type|action|description|target|id|started|stopped|held|addAPI|remAPI|concentration|)(?:\:|=)([^,]+)/) || null;
+            vars=d.match(/(who|next|main|previous|delay|start|stop|hold|timer|pause|show|all|favorites|setup|conditions|condition|sort|combat|turnorder|accouncements|timer|macro|status|list|export|import|type|key|value|setup|tracker|confirm|direction|duration|message|initiative|config|assigned|type|action|description|target|id|started|stopped|held|addAPI|remAPI|concentration|view|)(?:\:|=)([^,]+)/) || null;
             if(vars) {
                 if (vars[2].includes('INDEX')) {
                     let key, result, temp
@@ -317,13 +320,9 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         if (cmdDetails.action == 'show'){
-            if (cmdDetails.details.all) {
-                editFavoriteState('all');
-            }    
-            if (cmdDetails.details.favorites) {
-                editFavoriteState('favorites');
+            if (cmdDetails.details.view) {
+                editShowState(cmdDetails.details.value);
             } 
-    
             if (cmdDetails.details.setup) {
                 sendConfigMenu();
             }    
@@ -463,8 +462,6 @@ var CombatMaster = CombatMaster || (function() {
         let startButton         = makeImageButton('!cmaster --turn,start --main',startImage,'Start Combat','transparent',18)
         let pauseTimerButton    = makeImageButton('!cmaster --turn,timer=pause',pauseImage,'Pause Timer','transparent',18)
         let stopTimerButton     = makeImageButton('!cmaster --turn,timer=stop',timerImage,'Stop Timer','transparent',18)
-        let allConditionsButton = makeImageButton('!cmaster --show,all --main',allConditionsImage,'Show All Conditions','transparent',18)
-        let favoritesButton     = makeImageButton('!cmaster --show,favorites --main',favoriteImage,'Show Favorites','transparent',18)
         let configButton        = makeImageButton('!cmaster --show,setup',backImage,'Show Setup','transparent',18)
         let showButton          = makeImageButton('!cmaster --show,assigned',showImage,'Show Conditions','transparent',18)
         let sortButton          = makeImageButton('!cmaster --turn,sort',sortImage,'Sort Turnorder','transparent',18)
@@ -488,12 +485,6 @@ var CombatMaster = CombatMaster || (function() {
         } else {
             contents = '<div style="background-color:red">'+startButton
         }
-        
-        if (['favorites',null].includes(state[combatState].config.status.showConditions)){
-            contents += allConditionsButton
-        } else {
-            contents += favoritesButton
-        } 
 
         contents += configButton
         contents += '</div>'
@@ -550,26 +541,38 @@ var CombatMaster = CombatMaster || (function() {
             if (state[combatState].config.status.showConditions == 'favorites') {
                 if (condition.favorite) {
                     listItems.push(listContents);
-                }    
-            } else {
+                }
+            } 
+            if (state[combatState].config.status.showConditions == 'conditions') {
+                if (condition.type == 'Condition') {
+                    listItems.push(listContents);
+                }
+            } 
+            if (state[combatState].config.status.showConditions == 'spells') {
+                if (condition.type == 'Spell') {
+                    listItems.push(listContents);
+                }
+            } 
+            if (state[combatState].config.status.showConditions == 'all') {
                 listItems.push(listContents);
             }
         }
+        
+        let viewButton = makeBigButton('Change View', '!cmaster --show,view,value=?{View|All,all|Conditions,conditions|Spells,spells|Favorites,favorites|} --main')
 
-        //send menu 
         state[combatState].config.previousPage = 'main'
         
         if (state[combatState].config.status.access) {
             let playerIDs = state[combatState].config.status.access.split(',');
             playerIDs.forEach((player) => {
-                makeAndSendMenu(contents+makeList(listItems),titleText,player);    
+                makeAndSendMenu(contents+makeList(listItems)+viewButton,titleText,player);    
             })
         }
         
         if (who == 'gm') {
-            makeAndSendMenu(contents+makeList(listItems),titleText,who);
+            makeAndSendMenu(contents+makeList(listItems)+viewButton,titleText,who);
         } else {
-            makeAndSendMenu(makeList(listItems),titleText,who);
+            makeAndSendMenu(makeList(listItems)+viewButton,titleText,who);
         }    
     },
     
@@ -990,6 +993,32 @@ var CombatMaster = CombatMaster || (function() {
         makeAndSendMenu(contents,title,'gm');
     },
 
+    targetedSpell = function (key) {
+        if (debug) {
+            log('Targeted Spell')
+        }
+
+        let title        = 'Select Targets'
+        let condition    = state[combatState].conditions[key]
+        let addButton    = makeImageButton('!cmaster --add,condition='+key,tagImage,'Spell Targets','transparent',18,'white')
+        title           += '<div style="display:inline-block;float:right;vertical-aligh:middle">'+addButton+'</div>'     
+        let contents     = 'Select target tokens to assign this spell and hit the button above when ready'
+        makeAndSendMenu(contents,title,'gm');
+    },
+    
+    targetedCaster = function (key,duration,direction,message) {
+        if (debug) {
+            log('Targeted Caster')
+        }
+
+        let title        = 'Select Caster'
+        let condition    = state[combatState].conditions[key]
+        let addButton    = makeImageButton(`!cmaster --add,condition=${key},duration=${duration},direction=${direction},message=${message}`,tagImage,'Spell Caster','transparent',18,'white')
+        title           += '<div style="display:inline-block;float:right;vertical-aligh:middle">'+addButton+'</div>'     
+        let contents     = 'Select the caster to assign concentration and hit the button above when ready'
+        makeAndSendMenu(contents,title,'gm');
+    },    
+    
 //*************************************************************************************************************
 //SESSION STATE MAINTENANCE
 //*************************************************************************************************************	
@@ -1031,7 +1060,7 @@ var CombatMaster = CombatMaster || (function() {
 		}
 	},
     
-	editFavoriteState = function (value) {
+	editShowState = function (value) {
 		state[combatState].config.status.showConditions = value;
 	},
 	
@@ -1291,6 +1320,9 @@ var CombatMaster = CombatMaster || (function() {
             if (defaultCondition && defaultCondition.targeted) {
                 targetedCondition(newCondition.id, key)
             }    
+            if (defaultCondition && defaultCondition.concentration == true && defaultCondition.override == true) {
+                targetedCaster('concentration',newCondition.duration,newCondition.direction,'Concentrating on ' + defaultCondition.name)
+            }
         }    
     },  
 
@@ -2767,18 +2799,19 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         if (debug) {
-            log('Handle Spell Cast')
-            log(spellName)
-            log(description)
-            log(concentrate)
+            log('Spell Name:'+spellName)
+            log('Description:'+description)
+            log('Concentrate:'+concentrate)
         }
         if (!description) {
             description = 'None'
         }
         
-        if (status.autoAddSpells) {      
-            if (!getConditionByKey(spellName.toLowerCase())) {
-                let key = spellName.toLowerCase()
+        if (status.autoAddSpells) {     
+            let key = spellName.toLowerCase()
+            let condition = getConditionByKey(key)
+            if (typeof condition == 'undefined' && !getIgnoresByKey(key)) {
+                
                 state[combatState].spells[key] = {
                 				name: spellName,
                 				key: key,
@@ -2801,27 +2834,32 @@ var CombatMaster = CombatMaster || (function() {
                 				remRoll20AM: 'None',
                 				remFX: 'None',
                 				remMacro: 'None'				
-                }	
+                } 
 			
                 let addSpellButton = makeBigButton(`Add Spell to Combat Master`, `!cmaster --spell,confirm=true,key=${key}`)
                 let ignoreSpellButton = makeBigButton(`Ignore this Spell`, `!cmaster --spell,confirm=false,key=${key}`)
                 makeAndSendMenu(`A new spell - ${spellName} - was detected<br>`+addSpellButton+ignoreSpellButton ,`New Spell Found`,`gm`)
+                
+            }  else if (condition) {
+                targetedSpell(key)
+                if (concentration.useConcentration && concentrate == true && condition.override == false) {     
+                    let characterName   = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);            
+                    characterName       = RegExp.$1;
+                    let characterID     = findObjs({ name: characterName, _type: 'character' }).shift().get('id')    
+                    let tokenObj        = findObjs({ represents: characterID, _pageid:Campaign().get("playerpageid"), _type: 'graphic' })[0]
+                    addConditionToToken(tokenObj,'concentration',condition.duration,condition.direction,'Concentrating on ' + spellName)
+                }                   
             }
         }
 
-        if (concentration.useConcentration && concentrate == true) {     
-            let characterName   = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);            
-            characterName       = RegExp.$1;
-            log (characterName)
-            let characterID     = findObjs({ name: characterName, _type: 'character' }).shift().get('id')    
-            log(characterID)
-            let tokenObj        = findObjs({ represents: characterID, _pageid:Campaign().get("playerpageid"), _type: 'graphic' })[0]
-            log(tokenObj)
-            addConditionToToken(tokenObj,'concentration',1,0,'Concentrating on ' + spellName)
-        }   
+
     },
     
     addSpell = function(key) {
+        if (debug) {
+            log('Add Spell')
+            log(key)
+        }        
         state[combatState].config.conditions[key] = state[combatState].spells[key] 
         let index = state[combatState].spells.indexOf(key);
         if (index > -1) {
@@ -2831,7 +2869,28 @@ var CombatMaster = CombatMaster || (function() {
     },
  
     ignoreSpell = function(key) {
+        if (debug) {
+            log('Ignore Spell')
+            log(key)
+        }  
+        
        state[combatState].ignores.push(key)
+       log(state[combatState].ignores)
+       makeAndSendMenu('Spell has been added to Ignore List','Spell Ignored','gm');
+    },
+    
+    getIgnoresByKey = function(key) {
+        if (debug) {
+            log('Get Ignores By Key')
+            log('Key:'+key)
+            log('Exists:'+state[combatState].ignores.includes(key))
+        }  
+        
+        if (state[combatState].ignores.includes(key)) {
+            return true
+        } else {
+            return false
+        }  
     },
     
     inFight = function () {
