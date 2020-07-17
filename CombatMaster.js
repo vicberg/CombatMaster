@@ -1,5 +1,5 @@
 /* 
- * Version 2.18
+ * Version 2.17
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.18',
+	    version = '2.17',
         timerObj,
         intervalHandle,
         debug = true,
@@ -788,12 +788,13 @@ var CombatMaster = CombatMaster || (function() {
 		
 		if (concentration.useConcentration) {
 		    listItems.push(makeTextButton('Add Marker', concentration.autoAdd, '!cmaster --config,concentration,key=autoAdd,value='+!concentration.autoAdd+' --show,concentration'))	            
-		    listItems.push(makeTextButton('Add Roll Save', concentration.autoRoll, '!cmaster --config,concentration,key=autoRoll,value='+!concentration.autoRoll+' --show,concentration'))  
+		    listItems.push(makeTextButton('Auto Roll Save', concentration.autoRoll, '!cmaster --config,concentration,key=autoRoll,value='+!concentration.autoRoll+' --show,concentration'))  
 		    listItems.push(makeTextButton('Notify', concentration.notify, '!cmaster --config,concentration,key=notify,value=?{Notify|Everyone,Everyone|Character,Character|GM,GM} --show,concentration'))
 		 }
 		
 		if (concentration.autoRoll) {
-		    listItems.push(makeTextButton('Wound Bar', concentration.woundBar, '!cmaster --config,concentration,key=woundBar,value=?{Wound Bar|Bar1,Bar1|Bar2,Bar2|Bar3,Bar3} --show,concentration'))  
+		    listItems.push(makeTextButton('Wound Bar', concentration.woundBar, '!cmaster --config,concentration,key=woundBar,value=?{Wound Bar|Bar1,bar1|Bar2,bar2|Bar3,bar3} --show,concentration'))  
+		    listItems.push(makeTextButton('Attribute', concentration.attribute, '!cmaster --config,concentration,key=attribute,value=?{Attribute|} --show,concentration'))  
 		    
 		}
 
@@ -2858,8 +2859,6 @@ var CombatMaster = CombatMaster || (function() {
                 }                   
             }
         }
-
-
     },
     
     addSpell = function(key) {
@@ -2899,6 +2898,116 @@ var CombatMaster = CombatMaster || (function() {
             return false
         }  
     },
+//*************************************************************************************************************
+//SPELLS 
+//*************************************************************************************************************	  
+    handleConstitutionSave = function(obj, prev) {
+        if (debug) {
+            log('Handle Constitution Save')
+        }
+        
+        let tokenID = obj.get('id')
+        let found = false
+        state[combatState].conditions.forEach((condition) => {
+            if (condition.id == tokenID && condition.key == 'concentration') {
+                found = true
+            }
+        })
+        
+        if (!found) {
+            return;
+        }
+
+        let conditions = obj.get('statusmarkers').split(',')
+        let condition = state[combatState].conditions.map(id => obj.get('statusmarkers'))
+        let concentration = state[combatState].config.concentration
+        let bar = concentration.woundBar+'_value'
+        let target = concentration.notify
+
+        if(obj.get(bar) < prev[bar]) {
+            let calcDC = Math.floor((prev[bar] - obj.get(bar))/2)
+            let DC = (calcDC > 10) ? calcDC : 10
+            let conSave = parseInt(getAttrByName(obj.get('represents'), concentration.attribute, 'current')) || 0
+            let contents;
+
+            if(target === 'Character'){
+                contents = "Make a Concentration Check - <b>DC " + DC + "</b>.";
+                target = obj.get('name').split(' ').shift()
+            } else if(target === 'Everyone'){
+                contents = '<b>'+obj.get('name')+'</b> must make a Concentration Check - <b>DC ' + DC + '</b>.';
+                target = '';
+            }else{
+                contents = '<b>'+obj.get('name')+'</b> must make a Concentration Check - <b>DC ' + DC + '</b>.';
+                target = 'gm';
+            }
+            makeAndSendMenu(contents, '', target);
+            // if(concentration.autoRoll){
+            //     roll(obj.get('represents'), DC, conSave, obj.get('name'), target);
+            // }else{
+                // makeAndSendMenu(contents, '', target);
+            // }
+
+            // let length = checked.push(obj.get('represents'));
+            // setTimeout(() => {
+            //     checked.splice(length-1, 1);
+            // }, 1000);
+        }
+    },
+
+    // roll = (represents, DC, conSave, name, target) => {
+    //     sendChat(script_name, '[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]', results => {
+    //         let title = 'Concentration Save <br> <b style="font-size: 10pt; color: gray;">'+name+'</b>',
+    //             advantageRollResult;
+
+    //         let rollresult = results[0].inlinerolls[0].results.rolls[0].results[0].v;
+    //         let result = rollresult;
+
+    //         if(advantage){
+    //             advantageRollResult = randomInteger(20);
+    //             result = (rollresult <= advantageRollResult) ? advantageRollResult : rollresult;
+    //         }
+
+    //         let total = result + con_save_mod;
+
+    //         let success = total >= DC;
+
+    //         let result_text = (success) ? 'Success' : 'Failed',
+    //             result_color = (success) ? 'green' : 'red';
+
+    //         let rollResultString = (advantage) ? rollresult + ' / ' + advantageRollResult : rollresult;
+
+    //         let contents = ' \
+    //         <table style="width: 100%; text-align: left;"> \
+    //             <tr> \
+    //                 <th>DC</th> \
+    //                 <td>'+DC+'</td> \
+    //             </tr> \
+    //             <tr> \
+    //                 <th>Modifier</th> \
+    //                 <td>'+con_save_mod+'</td> \
+    //             </tr> \
+    //             <tr> \
+    //                 <th>Roll Result</th> \
+    //                 <td>'+rollResultString+'</td> \
+    //             </tr> \
+    //         </table> \
+    //         <div style="text-align: center"> \
+    //             <b style="font-size: 16pt;"> \
+    //                 <span style="border: 1px solid '+result_color+'; padding-bottom: 2px; padding-top: 4px;">[['+result+'+'+con_save_mod+']]</span><br><br> \
+    //                 '+result_text+' \
+    //             </b> \
+    //         </div>'
+    //         makeAndSendMenu(contents, title, target);
+
+    //         if(target !== '' && target !== 'gm'){
+    //             makeAndSendMenu(contents, title, 'gm');
+    //         }
+
+    //         if(!success){
+    //             removeMarker(represents);
+    //         }
+    //     });
+    // },    
     
     inFight = function () {
         return (Campaign().get('initiativepage') !== false);
@@ -3135,7 +3244,8 @@ var CombatMaster = CombatMaster || (function() {
 					notify: 'GM',
 					autoAdd: false,
 					autoRoll: false,
-					woundBar: 'Bar1'
+					woundBar: 'Bar1',
+					attribute: 'None'
 				},					
 			    conditions: {
 					blinded: {
@@ -3745,7 +3855,10 @@ var CombatMaster = CombatMaster || (function() {
 				}
 				if(!state[combatState].config.concentration.hasOwnProperty('woundBar')){
 					state[combatState].config.concentration.woundBar = combatDefaults.config.concentration.woundBar;
-				}			
+				}	
+				if(!state[combatState].config.concentration.hasOwnProperty('attribute')){
+					state[combatState].config.concentration.attribute = combatDefaults.config.concentration.attribute;
+				}					
             }            
         }
         
@@ -4302,6 +4415,7 @@ var CombatMaster = CombatMaster || (function() {
         on('change:graphic:top', handleGraphicMovement);
         on('change:graphic:left', handleGraphicMovement);
         on('change:graphic:layer', handleGraphicMovement);
+        on('change:graphic:'+state[combatState].config.concentration.woundBar+'_value', handleConstitutionSave);
 
         if('undefined' !== typeof DeathTracker && DeathTracker.ObserveTokenChange){
             DeathTracker.ObserveTokenChange(function(obj,prev) {
