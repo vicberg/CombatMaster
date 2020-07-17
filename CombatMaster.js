@@ -1,5 +1,5 @@
 /* 
- * Version 2.17
+ * Version 2.19
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.17',
+	    version = '2.19',
         timerObj,
         intervalHandle,
         debug = true,
