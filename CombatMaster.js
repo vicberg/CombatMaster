@@ -1,5 +1,5 @@
 /* 
- * Version 2.19
+ * Version 2.20
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.19',
+	    version = '2.20',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1087,6 +1087,9 @@ var CombatMaster = CombatMaster || (function() {
 				description: ' ',
 				duration: 1,
 				direction: 0,
+				override: false,
+				favorite: false,
+				targeted: false,
 				message: 'None',
 				concentration: concentration,
 				description: description,
@@ -1515,12 +1518,13 @@ var CombatMaster = CombatMaster || (function() {
         setTurnorder(hold.turnorder);
 
         let tokenObj
-        let iconTag;
+        let icon
 
         [...hold.conditions].forEach((condition, i) => {
             tokenObj = getObj('graphic', condition.id)
             if (tokenObj) {
                 addConditionToToken(tokenObj,condition.key,condition.duration,condition.direction,condition.message);
+                icon = getIconTag(condition.iconType, condition.icon)
                 condition.target.forEach((target) => {
                     addMarker(getObj('graphic', target),icon)
                 }) 
@@ -3244,8 +3248,8 @@ var CombatMaster = CombatMaster || (function() {
 					notify: 'GM',
 					autoAdd: false,
 					autoRoll: false,
-					woundBar: 'Bar1',
-					attribute: 'None'
+					woundBar: 'bar1',
+					attribute: 'consitution_save_bonus'
 				},					
 			    conditions: {
 					blinded: {
