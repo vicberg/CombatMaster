@@ -1,5 +1,5 @@
 /* 
- * Version 2.21
+ * Version 2.22
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.21',
+	    version = '2.22',
         timerObj,
         intervalHandle,
         debug = true,
@@ -562,14 +562,14 @@ var CombatMaster = CombatMaster || (function() {
 
         state[combatState].config.previousPage = 'main'
         
-        if (state[combatState].config.status.access) {
+        if (state[combatState].config.status.access && who != 'None') {
             let playerIDs = state[combatState].config.status.access.split(',');
             playerIDs.forEach((player) => {
                 makeAndSendMenu(contents+makeList(listItems)+viewButton,titleText,player);    
             })
         }
         
-        if (who == 'gm') {
+        if (who == 'gm' || who == 'None') {
             makeAndSendMenu(contents+makeList(listItems)+viewButton,titleText,who);
         } else {
             makeAndSendMenu(makeList(listItems)+viewButton,titleText,who);
@@ -987,7 +987,6 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         let title        = 'Select Targets'
-        let condition    = state[combatState].conditions[key]
         let addButton    = makeImageButton('!cmaster --add,target,id='+id+',condition='+key,tagImage,'Targeted Icons','transparent',18,'white')
         title           += '<div style="display:inline-block;float:right;vertical-aligh:middle">'+addButton+'</div>'     
         let contents     = 'Select target tokens to assign this condition and hit the button above when ready'
@@ -1000,8 +999,8 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         let title        = 'Select Targets'
-        let condition    = state[combatState].conditions[key]
-        let addButton    = makeImageButton('!cmaster --add,condition='+key,tagImage,'Spell Targets','transparent',18,'white')
+        let condition    = getConditionByKey(key)
+        let addButton    = makeImageButton(`!cmaster --add,condition=${key},duration=${condition.duration},direction=${condition.direction},message=${condition.message}`,tagImage,'Spell Targets','transparent',18,'white')
         title           += '<div style="display:inline-block;float:right;vertical-aligh:middle">'+addButton+'</div>'     
         let contents     = 'Select target tokens to assign this spell and hit the button above when ready'
         makeAndSendMenu(contents,title,'gm');
@@ -1013,7 +1012,7 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         let title        = 'Select Caster'
-        let condition    = state[combatState].conditions[key]
+        let condition    = getConditionByKey(key)
         let addButton    = makeImageButton(`!cmaster --add,condition=${key},duration=${duration},direction=${direction},message=${message}`,tagImage,'Spell Caster','transparent',18,'white')
         title           += '<div style="display:inline-block;float:right;vertical-aligh:middle">'+addButton+'</div>'     
         let contents     = 'Select the caster to assign concentration and hit the button above when ready'
@@ -2787,12 +2786,15 @@ var CombatMaster = CombatMaster || (function() {
             spellLevel = msg.content.match(/spelllevel=([^\n{}]*[^"\n{}])/)  
             spellLevel = RegExp.$1;  
             log(spellLevel)
-            if (!spellLevel) {
-                return;
-            }
+
+            
             if (msg.content.includes("{{concentration=1}}")) {
                 concentrate = true
             } 
+            log(concentrate)
+            if (!spellLevel && !concentrate) {
+                return;
+            }            
         } else if (status.sheet == 'Shaped') {
             spellName    = msg.content.match(/title=([^\n{}]*[^"\n{}])/);  
             spellName    = RegExp.$1;         
