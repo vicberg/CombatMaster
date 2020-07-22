@@ -1,5 +1,5 @@
 /* 
- * Version 2.20
+ * Version 2.21
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.20',
+	    version = '2.21',
         timerObj,
         intervalHandle,
         debug = true,
@@ -754,8 +754,8 @@ var CombatMaster = CombatMaster || (function() {
             
             listItems.push(listContents)
         }) 
-       
-        makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');
+
+        makeAndSendMenu(addButton+makeList(listItems,banner.backButton),banner.titleText,'gm');
 	},
 	
 	sendStatusMenu = function() {
@@ -788,7 +788,7 @@ var CombatMaster = CombatMaster || (function() {
 		
 		if (concentration.useConcentration) {
 		    listItems.push(makeTextButton('Add Marker', concentration.autoAdd, '!cmaster --config,concentration,key=autoAdd,value='+!concentration.autoAdd+' --show,concentration'))	            
-		    listItems.push(makeTextButton('Auto Roll Save', concentration.autoRoll, '!cmaster --config,concentration,key=autoRoll,value='+!concentration.autoRoll+' --show,concentration'))  
+		    listItems.push(makeTextButton('Check for Save', concentration.autoRoll, '!cmaster --config,concentration,key=autoRoll,value='+!concentration.autoRoll+' --show,concentration'))  
 		    listItems.push(makeTextButton('Notify', concentration.notify, '!cmaster --config,concentration,key=notify,value=?{Notify|Everyone,Everyone|Character,Character|GM,GM} --show,concentration'))
 		 }
 		
@@ -895,7 +895,7 @@ var CombatMaster = CombatMaster || (function() {
     },
     
     sendConditionAddAPIMenu = function (key) {
-        const banner = makeBanner('condition','Add Condition API','condition='+key)
+        const banner = makeBanner('addAPI','Add API','condition='+key)
         let listItems = []
         let condition  = state[combatState].config.conditions[key]
 
@@ -911,7 +911,7 @@ var CombatMaster = CombatMaster || (function() {
     },
 
     sendConditionRemAPIMenu = function (key) {
-        const banner = makeBanner('condition','Remove Condition API','condition='+key)
+        const banner = makeBanner('remAPI','Remove API','condition='+key)
         let listItems = []
         let condition  = state[combatState].config.conditions[key]
         
@@ -977,8 +977,8 @@ var CombatMaster = CombatMaster || (function() {
     },
     
     exportConditions = function () {
-        let backButton = makeBigButton('Back', '!cmaster --back,setup')
-        makeAndSendMenu('<p>Copy the entire content above and save it on your pc.</p><pre>'+HE(JSON.stringify(state[combatState].config))+'</pre><div>'+backButton+'</div>', 'Export Configs');
+        const banner = makeBanner('export','Export CM','setup')
+        makeAndSendMenu('<p>Copy the entire content above and save it on your pc.</p><pre>'+HE(JSON.stringify(state[combatState].config))+'</pre><div>'+banner.backButton+'</div>', banner.titleText);
     },
     
     targetedCondition = function (id, key) {
@@ -1087,9 +1087,6 @@ var CombatMaster = CombatMaster || (function() {
 				description: ' ',
 				duration: 1,
 				direction: 0,
-				override: false,
-				favorite: false,
-				targeted: false,
 				message: 'None',
 				concentration: concentration,
 				description: description,
@@ -2834,9 +2831,10 @@ var CombatMaster = CombatMaster || (function() {
                 				duration: 1,
                 				direction: 0,
                 				message: 'None',
+                				targeted: false,
+                				favorite: false,
                 				concentration: concentrate,
                 				description: description,
-                				tageted: false,
                 				addAPI: 'None',
                 				addRoll20AM: 'None',
                 				addFX: 'None',
@@ -3248,8 +3246,8 @@ var CombatMaster = CombatMaster || (function() {
 					notify: 'GM',
 					autoAdd: false,
 					autoRoll: false,
-					woundBar: 'bar1',
-					attribute: 'consitution_save_bonus'
+					woundBar: 'Bar1',
+					attribute: 'None'
 				},					
 			    conditions: {
 					blinded: {
@@ -3971,13 +3969,20 @@ var CombatMaster = CombatMaster || (function() {
             title = 'Macro & API Menu'
         } else if (cmdDetails.details.status) {
             title = 'Status Menu'
+        } else if (cmdDetails.details.concentration) {
+            title = 'Concentration Menu'            
         } else if (cmdDetails.details.conditions) {
             title = 'Conditions Menu'
         } else if (cmdDetails.details.condition) {
             title = 'Condition Menu'
+        } else if (cmdDetails.details.addAPI) {
+            title = 'Add API Menu'
+        } else if (cmdDetails.details.remAPI) {
+            title = 'Remove API Menu'            
+        } else if (cmdDetails.details.export) {
+            title = 'Export Menu'
         } 
         handout = findHandout(title) 
-        log(handout)
         makeAndSendMenu(`<a href="http://journal.roll20.net/handout/${handout[0].id}">View Help</a>`,title,'gm')         
     },
     
@@ -3994,23 +3999,30 @@ var CombatMaster = CombatMaster || (function() {
         let menuAnnouncements   = createHandout('Announcements Menu')
         let menuMacro           = createHandout('Macro & API Menu')
         let menuStatus          = createHandout('Status Menu')
+        let menuConcentration   = createHandout('Concentration Menu')
         let menuConditions      = createHandout('Conditions Menu')
         let menuCondition       = createHandout('Condition Menu')
+        let menuAddAPI          = createHandout('Add API Menu')
+        let menuRemoveAPI       = createHandout('Remove API Menu')
         let menuExport          = createHandout('Export Menu')
         
         setTimeout(function() {
             buildMainMenuStarted(mainStarted,menuSetup.id,menuCondition.id)
             buildMainMenuStopped(mainStopped,menuSetup.id,menuCondition.id)
             buildMainMenuHeld(mainHeld,menuSetup.id,menuCondition.id)
-            buildSetupMenu(menuSetup,menuInitiative.id,menuTurnorder.id,menuTimer.id,menuAnnouncements.id,menuMacro.id,menuStatus.id,menuConditions.id,menuExport.id)
+            buildSetupMenu(menuSetup,menuInitiative.id,menuTurnorder.id,menuTimer.id,menuAnnouncements.id,menuMacro.id,menuStatus.id,menuConcentration.id,menuConditions.id,menuExport.id)
             buildInitiativeMenu(menuInitiative,menuSetup.id)
             buildTurnorderMenu(menuTurnorder,menuSetup.id)
             buildTimerMenu(menuTimer,menuSetup.id)
             buildAnnouncementsMenu(menuAnnouncements,menuSetup.id)
             buildMacroMenu(menuMacro,menuSetup.id)
             buildStatusMenu(menuStatus,menuSetup.id)
+            buildConcentrationMenu(menuConcentration,menuSetup.id)
             buildConditionsMenu(menuConditions,menuSetup.id)
             buildConditionMenu(menuCondition,menuSetup.id)
+            buildAddAPIMenu(menuAddAPI)
+            buildRemoveAPIMenu(menuRemoveAPI)
+            buildExportMenu(menuExport)
         },1000)    
         
     },
@@ -4033,9 +4045,7 @@ var CombatMaster = CombatMaster || (function() {
                         archived:true
                     })
         
-        return handout            
-                
-
+        return handout  
     },
 
     buildMainMenuStarted = function(handout,setupID,conditionID) {
@@ -4043,23 +4053,23 @@ var CombatMaster = CombatMaster || (function() {
         
         notes = `<div class="content note-editor notes">
                     <p>
-                        <img src="https://s3.amazonaws.com/files.d20.io/images/133804422/EsA2W_xTC14DEowWlugcig/original.png?15892970595">
+                        <img src="https://s3.amazonaws.com/files.d20.io/images/152155102/i5BnjEmv8VSsfpoK44jaKw/original.png?15953856105">
                     </p>
+                    <h4><i>Started Combat (Green Bar)</i> - Icons in order from Left to Right </h4>
                     <ul>
-                        <li><b>Start Combat </b>— Starts up combat. Must have tokens selected if using CM to roll initiative.</li>
-                        <li><b>Favorites Menu </b>— Show favorites menu (the default is to display all conditions).<br></li>
-                        <ul>
-                            <li>Set a condition as favorite by clicking on the globe icon next to it.</li>
-                            <li>If clicked, a star icon appears and the condition will show up on favorites menu.</li>
-                            <li>Favorites menu shows only conditions tagged as favorite.</li>
-                        </ul>
-                        <li><b>Setup </b>— Shows the <a href="http://journal.roll20.net/handout/${setupID}">Setup Menu</a>.</li>
-                        <li><b>Started </b>— A green bar indicates that combat is started. </li>
-                        <li><b>Help </b>— All pages have a Help button which opens the handout related to the page being viewed.</li>
+                        <li><b>Stop Combat </b>— Ends Combat and clears Turnorder.</li>
+                        <li><b>Hold Combat </b>— Sets Combat to Hold and saves off everything for a restart</li>
+                        <li><b>Previous Player </b>— Sets Active Player to previous player in Turnorder</li>
+                        <li><b>Next Player </b>— Sets Active Player to Next Player in Turnorder</li>
+                        <li><b>Pause Timer </b>— Pauses Timer. Click again to restart Timer</li>
+                        <li><b>Stop Timer </b>— Stops Timer. Clears Timer.  Can't be restarted until next Combat</li>
+                        <li><b>Show Conditions </b>— Shows all Conditions assigned to all Players & NPCs</li>
+                        <li><b>Sort Turnorder </b>— Sorts Turnorder in ascending sequence</li>
+                        <li><b>Setup  </b>— Shows the <a href="http://journal.roll20.net/handout/${setupID}">Setup Menu</a></li>
                     </ul>`
         notes += buildMainConditions('https://s3.amazonaws.com/files.d20.io/images/133804430/JJ--U559pOgsd9UBpUb06g/original.png?15892970605',conditionID)
         notes += `</div>`
-                
+
         handout.set({notes:notes});    
     },
  
@@ -4068,19 +4078,12 @@ var CombatMaster = CombatMaster || (function() {
         
         notes = `<div class="content note-editor notes">
                     <p>
-                        <img src="https://s3.amazonaws.com/files.d20.io/images/133804437/6Q_5YiQQVSF6errA9mgFsA/original.png?15892970625">
+                        <img src="https://s3.amazonaws.com/files.d20.io/images/152155096/Yb0jQ-AqPsjXPAN4F0OHVA/original.png?15953856105">
                     </p>
+                    <h4><i>Start Combat (Red Bar)</i> - Icons in order from Left to Right </h4>
                     <ul>
                         <li><b>Start Combat </b>— Starts up combat. Must have tokens selected if using CM to roll initiative.</li>
-                        <li><b>Favorites Menu </b>— Show favorites menu (the default is to display all conditions).<br></li>
-                        <ul>
-                            <li>Set a condition as favorite by clicking on the globe icon next to it.</li>
-                            <li>If clicked, a star icon appears and the condition will show up on favorites menu.</li>
-                            <li>Favorites menu shows only conditions tagged as favorite.</li>
-                        </ul>
                         <li><b>Setup </b>— Shows the <a href="http://journal.roll20.net/handout/${setupID}">Setup Menu</a>.</li>
-                        <li><b>Stopped </b>— A red bar indicates that combat is stopped. </li>
-                        <li><b>Help </b>— All pages have a Help button which opens the handout related to the page being viewed.</li>
                     </ul>`
         notes += buildMainConditions('https://s3.amazonaws.com/files.d20.io/images/133804645/pmJuadcB01opW3Lg8lyOYA/original.png?15892970725',conditionID)
         notes += `</div>`
@@ -4093,19 +4096,12 @@ var CombatMaster = CombatMaster || (function() {
         
         notes = `<div class="content note-editor notes">
                     <p>
-                        <img src="https://s3.amazonaws.com/files.d20.io/images/133804393/8c-dsYqpwuyIhTk--gKvRA/original.png?15892970545">
+                        <img src="https://s3.amazonaws.com/files.d20.io/images/152155100/DcEfpVBdzKz9t-SS23KZhA/original.png?15953856105">
                     </p>
+                    <h4><i>Held Combat (Yellow Bar)</i> - Icons in order from Left to Right </h4>
                     <ul>
-                        <li><b>Start Combat </b>— Starts up combat. Must have tokens selected if using CM to roll initiative.</li>
-                        <li><b>Favorites Menu </b>— Show favorites menu (the default is to display all conditions).<br></li>
-                        <ul>
-                            <li>Set a condition as favorite by clicking on the globe icon next to it.</li>
-                            <li>If clicked, a star icon appears and the condition will show up on favorites menu.</li>
-                            <li>Favorites menu shows only conditions tagged as favorite.</li>
-                        </ul>
+                        <li><b>Start Combat </b>— Restarts Combat from where it was previous held</li>
                         <li><b>Setup </b>— Shows the <a href="http://journal.roll20.net/handout/${setupID}">Setup Menu</a>.</li>
-                        <li><b>Held </b>— A yellow bar indicates that combat is being held.</li>
-                        <li><b>Help </b>— All pages have a Help button which opens the handout related to the page being viewed.</li>
                     </ul>`
         notes += buildMainConditions('https://s3.amazonaws.com/files.d20.io/images/133804415/0Te1DEzFMolSiIj7DfZfTw/original.png?15892970575', conditionID)
         notes += `</div>`
@@ -4114,26 +4110,32 @@ var CombatMaster = CombatMaster || (function() {
     },    
        
     buildMainConditions = function(image,conditionID) {
-        let notes = `<p>
-                        <img src="${image}">
-                    </p>
+        let notes = `<h4><i>Conditions</i> - From Left to Right </h4>
                     <ul>
                         <li><b>Icon </b>— The default or custom token marker assigned to the condition is displayed here. If the condition uses the Token Condition script, it will simply show "TC" here.</li>
-                        <li><b>Name </b>— The name of the condition.</li><li><b>Add </b>— Add the condition to the selected token(s). Will use the conditions settings for Duration, Default, Override, and Messages. Will invoke any API commands and/or Macros assigned to the condition.</li>
+                        <li><b>Name </b>— The name of the condition.</li>
+                        <li><b>Add </b>— Add the condition to the selected token(s). Will use the conditions settings for Duration, Default, Override, and Messages. Will invoke any API commands and/or Macros assigned to the condition.</li>
                         <li><b>Remove </b>— Removes the condition from the selected token(s).</li>
                         <li><b>Favorite </b>— If a star is displayed, the condition will show in the favorites menu. If a globe is displayed, the condition will only show in the all conditions menu. Clicking on either the star or globe icon for each condition will toggle if it's a favorite or not.</li><li><b>Edit </b>— Shows the <a href="http://journal.roll20.net/handout/${conditionID}">Condition Menu</a> for that condition.</li>
+                    </ul>
+                    <h4><i>Change View</i></h4>
+                    <ul>
+                        <li><b>All </b>— Shows all Spells and Conditions</li>
+                        <li><b>Conditions </b>— Shows all Conditions (Condition Type = Condition)</li>
+                        <li><b>Spells </b>— Shows all Spells (Condition Type = Spell)</li>
+                        <li><b>Favorites </b>— Shows all Favorites</li>
                     </ul>`
                     
         return notes            
     },
         
-    buildSetupMenu = function(handout,initiativeID,turnorderID,timerID,announceID,macroID,statusID,conditionsID,exportID) {
+    buildSetupMenu = function(handout,initiativeID,turnorderID,timerID,announceID,macroID,statusID,concentrationID,conditionsID,exportID) {
         let notes = `<div class="content note-editor notes">
                         <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/133813354/OG8b5yOArrw-jtGiCA42Pw/original.png?15892986545">
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155095/jC-VGZKJY2kweDvEfeIKRA/original.png?15953856105">
                         </p>
+                        <h4><i>Combat Setup</i></h4>
                         <ul>
-                            <li><b>Combat Setup</b></li
                             <ul>
                                 <li><b><a href="http://journal.roll20.net/handout/${initiativeID}">Initiative</a></b> — Configure how CombatMaster will roll Initiative.<br></li>
                                 <li><b><a href="http://journal.roll20.net/handout/${turnorderID}">Turnorder</a></b> — Configure how the turnorder is managed.<br></li>
@@ -4142,24 +4144,21 @@ var CombatMaster = CombatMaster || (function() {
                                 <li><b><a href="http://journal.roll20.net/handout/${macroID}">Macro &amp; API</a></b> — Configure substitution strings for use in macros and API commands.<br></li>
                             </ul>
                         </ul>
-                        <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/133813366/9S6g5OZatxuMAJ0uwPBwTg/original.png?15892986585">
-                        </p>  
+                        <h4><i>Status Setup</i></h4>
                         <ul>
-                            <li><b>Status Setup</b></li>
                             <ul>
                                 <li><b><a href="http://journal.roll20.net/handout/${statusID}">Status</a></b> — Configure how conditions are managed and displayed.<br></li>
+                                <li><b><a href="http://journal.roll20.net/handout/${concentrationID}">Concentration</a></b> — Configure how Concentration is managed and displayed<br></li>
                                 <li><b><a href="http://journal.roll20.net/handout/${conditionsID}">Conditions</a></b> — A list of all conditions in CombatMaster; here, you can edit existing conditions or add new ones.<br></li>
-                                <li><b><a href="http://journal.roll20.net/handout/${exportID}">Export</a></b> — Puts a configuration code in chat to copy so you can import your conditions and settings into another game with CombatMaster. Simply triple-click the code to select it entirely (this also avoids selecting anything outside the code block). Save it in a handout to easily transmogrify to other games, or save it as a file on your computer.<br></li>'
+                                <li><b><a href="http://journal.roll20.net/handout/${exportID}">Export</a></b> — Puts a configuration code in chat to copy so you can import your conditions and settings into another game with CombatMaster. Simply triple-click the code to select it entirely (this also avoids selecting anything outside the code block). Save it in a handout to easily transmogrify to other games, or save it as a file on your computer.<br></li>
                                 <li><b>Import </b>— Import your configuration from another game.<br><b>NOTE:</b> <i>If migrating from CombatMaster to another CombatMaster, it will copy the entire CombatMaster configuration.  If coming from CombatTracker, it will only copy the conditions and you’ll have to reconfigure everything else. Importing from StatusInfo is not supported.<br></i></li>
                             </ul>
                         </ul>
-                        <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/134864903/rJ_Csa1GWTo_hwlNykRyIA/original.png?15895760375">
-                        </p>                        
+                        <h4><i>Resets</i></h4>                      
                         <ul>
-                            <li><b>Reset CombatMaster </b>— This resets the entire session state. It defaults the conditions to D&amp;D 5e.<br></li>
-                            <li><b>Back </b>— Return to the Main Menu.<br></li>
+                            <li><b>Reset </b>— This resets the entire session state. It defaults the conditions to D&amp;D 5e.<br></li>
+                            <li><b>Remove Ignores </b>— This Removes all Spells from the ignore list<br></li>
+                            <li><b>Clear Token Statuses</b>— This Removes all Conditions/Spells assigned to selected tokens<br></li>
                         </ul>
                     </div>`
                     
@@ -4169,10 +4168,10 @@ var CombatMaster = CombatMaster || (function() {
     buildInitiativeMenu = function(handout,setupID) {
         let notes = `<div class="content note-editor notes">
                         <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/102628957/Q8hJ5W9htatgAvhx5n8THw/original.png?15798733525">
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155099/rjAlxljzxTzHNp94R3FQaQ/original.png?15953856105">
                         </p>
+                        <h4><i>Initiative Setup</i></h4>
                         <ul>
-                            <li><b>Roll Initiative </b>— Choose how you want CombatMaster to roll Initiative.</li>
                             <ul>
                                 <li><b>None </b>— CombatMaster may be configured to not roll initiative.  You can have each character roll initiative on their own.<br><b>NOTE: </b><i>If you choose to not roll initiative from CombatMaster, the turn order will need to be set before starting combat.</i></li>
                                 <li><b>CombatMaster </b>— CombatMaster has its own initiative roller. To use it, select the tokens involved in the encounter, then click the Start button in the Main Menu.<br></li>
@@ -4186,7 +4185,6 @@ var CombatMaster = CombatMaster || (function() {
                                 <li><b>Target Tokens </b>— Not functional yet></li>
                             </ul>
                         </ul>
-                        <li><b>Back </b>— Return to the <a href="http://journal.roll20.net/handout/${setupID}">Setup Menu</a>.</li>
                     </div>`
 
         handout.set({notes:notes});     
@@ -4195,59 +4193,51 @@ var CombatMaster = CombatMaster || (function() {
     buildTurnorderMenu = function(handout,setupID) {
         let notes = `<div class="content note-editor notes">
                         <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/133825150/uxX33xiz1d9zz0RAGAR2nw/original.png?15893006645">
-                        </p>        
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155089/ITDSxgaL_xtJ7w_jiNg0gA/original.png?15953856105">
+                        </p>    
+                        <h4><i>Turnorder Setup</i></h4>
                         <ul>
-                            <li><b>Turnorder Setup </b>— configure what happens when progressing through the turnorder.</li>
                             <ul>
                                 <li><b>Sort Turnorder </b>— Sorts the turnorder in descending sequence (only) once created.<br></li>
                                 <li><b>Center Map on Token </b>— Will center the map for all players on the token currently active in the turnorder using the Ping function. This will not center the map if the token is on the GM Layer.<br></li>
                                 <li><b>Use Marker </b>— Determines if the marker is visible to players or always stays on the GM Layer. If visible, the marker will only move to the GM Layer if a token in the turnorder is on the GM Layer. It will do switch layers before moving to that token, and after moving to the next token, so as not to give away the position of any tokens hidden from players.<br></li><li><b>Marker Type </b>— Set to External URL (default) or can be set to Token Marker.  If Token Marker is selected a suitable token must be uploaded to your game.</li><li><b>Marker </b>— A thumbnail of what will be used to highlight the current active character.</li><li><b>Use Next Marker </b>— If set to true will display another marker around the player that is next in the turnorder.  If set to false, then the next player up is not highlighted.</li>
-                                <li><b>Next Marker </b>— A thumbnail of what will be used to highlight the next active character.</li>
+                                <li><b>Use Next Marker </b>— A thumbnail of what will be used to highlight the next active character. Set to None if you don't need it</li>
                             </ul>
-                        </ul>
-                        <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/133825164/vTVwiFHzWHG6eGzCClh7cg/original.png?15893006675">
-                        </p>`
-            notes +=    buildExternalCallMenu('<b>Beginning of Each Round</b> — Set various external calls which will be invoked at the start of each round.')
-            notes +=   `<p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/133825172/P-5VC0Xly2UnfKviFhqhQw/original.png?15893006695">
-                        </p>`
-            notes +=    buildExternalCallMenu("<b>Beginning of Each Turn</b> — Set various external calls which will be invoked at the start of each token's turn. Same limitations apply as for <b>Beginning of Each Round</b>.")
-            notes +=    `<li><b>Back </b>— Return to the <a href="http://journal.roll20.net/handout/${setupID}">Setup Menu</a>.</li>
-                    </div>`
+                        </ul>`
+            notes +=    buildExternalCallMenu('<b>Beginning of Each Round</b>')
+            notes +=    buildExternalCallMenu("<b>Beginning of Each Turn</b>")
+            notes +=    `</div>`
         
         handout.set({notes:notes}); 
     },      
     
     buildExternalCallMenu = function(title,round,condition) {
-        let notes = `<ul>
-                        <li>${title}</li>
-                        <ul>
-                            <li><b>API </b>— Must be a full API command. You must use brackets {{ and }} around the command and around each parameter when entering the command. Any inline rolls must be written like [#[1d6]#] instead of [[1d6]].</li>
-                            <li><b>Roll20AM </b>— Must be a full Roll20AM command. You must use brackets {{ and }} around the command and around each parameter when entering the command.</li>
-                            <li><b>FX </b>— Must be a valid FX command.</li>`
+        let notes = `<h4><i>${title}</i></h4>
+                     <h5><i> Set various external calls which will be invoked</i></h5>
+                    <ul>
+                        <li><b>API </b>— Must be a full API command. You must use brackets {{ and }} around the command and around each parameter when entering the command. Any inline rolls must be written like [#[1d6]#] instead of [[1d6]].</li>
+                        <li><b>Roll20AM </b>— Must be a full Roll20AM command. You must use brackets {{ and }} around the command and around each parameter when entering the command.</li>
+                        <li><b>FX </b>— Must be a valid FX command.</li>`
         if (round) {
-            notes +=       `<li><b>Characters Macro </b>— This uses a global macro substituting in all player characters on the map. Follows other macro rules (see below)</li>
-                            <li><b>All Tokens Macro </b>— This uses a global macro substituting in all tokens on the map. Follows other macro rules (see below)</li>`
+            notes +=    `<li><b>Characters Macro </b>— This uses a global macro substituting in all player characters on the map. Follows other macro rules (see below)</li>
+                         <li><b>All Tokens Macro </b>— This uses a global macro substituting in all tokens on the map. Follows other macro rules (see below)</li>`
         } else {
-            notes +=       `<li><b>Macro </b>— Must be the full macro name (without the #). Any inline rolls within the macro must be written like [#[1d6]#] instead of [[1d6]].</li>`
+            notes +=    `<li><b>Macro </b>— Must be the full macro name (without the #). Any inline rolls within the macro must be written like [#[1d6]#] instead of [[1d6]].</li>`
         }
         if (condition) {
-            notes +=        `<li><b>Persistent Macro</b> — Determines if the assigned macro is repeated at the start of an affected token's turn.`    
+            notes +=    `<li><b>Persistent Macro</b> — Determines if the assigned macro is repeated at the start of an affected token's turn.`    
         }
-        notes +=        `</ul>
-                    </ul>`
-                    
-        return notes            
-        
+        notes +=    `</ul>`
+
+        return notes  
     },    
     
     buildTimerMenu = function(handout,setupID) {
         let notes = `<div class="content note-editor notes">
                         <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/102632424/xyJ3PuKIJxHkaIvOhATDYw/original.png?15798774185">
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155088/xni0bvuiAktNfbrTbUAPog/original.png?15953856105">
                         </p>
+                        <h4><i>Timer Setup</i></h4>
                         <ul>
                             <li><b>Turn Timer </b>— Setting to true turns on the timer. The timer displays a red second by second countdown under the current active token in turnorder.<br>&lt;Image of a token with the timer below it&gt;<br></li>
                             <li><b>Time </b>— Determine the total time in seconds that the active token has to complete the turn.<br></li><li><b>Skip Turn </b>— Automatically advances to the next turn when the timer reaches 0.<br></li>
@@ -4255,8 +4245,6 @@ var CombatMaster = CombatMaster || (function() {
                             <li><b>Show on Token </b>— Choose whether to display the timer underneath the active token.<br></li>
                             <li><b>Token Font </b>— Set the font for the displayed timer.<br></li>
                             <li><b>Token Font Size </b>—  Set the font size for the displayed timer.</li>
-                            <li><b>Back </b>— Return to the <a href="http://journal.roll20.net/handout/${setupID}">Setup Menu</a>.<br>
-                            </li>
                         </ul>
                     </div>`
                     
@@ -4266,13 +4254,14 @@ var CombatMaster = CombatMaster || (function() {
      buildAnnouncementsMenu = function(handout,setupID) {
         let notes = `<div class="content note-editor notes">
                         <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/133847180/0B7x5Bfq9B_n6mh69uP9jQ/original.png?15893051665">
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155098/7i1LPHIZ87fVB56cUMcvhw/original.png?15953856105">
                         </p>
+                        <h4><i>Announcements Setup</i></h4>
                         <ul>
                             <li><b>Announce Rounds </b>— Sends a message to chat when a new round has started.</li>
                             <li><b>Announce Turns </b>— Sends a message to chat with the current active token if it is not on the GM Layer, plus any assigned conditions or messages.<br>
                                 <ul>
-                                    <li><img src="https://s3.amazonaws.com/files.d20.io/images/133847667/tEe6P0CXqg_AOFSeIwMlfg/original.png?15893052865"></li>
+                                    <li><img src="https://s3.amazonaws.com/files.d20.io/images/152224865/IupB8psepZNaKPSkDB1UhA/original.png?15954302265"></li>
                                     <li><b>Down Arrow Icon </b>— Delays Player Turn.</li>
                                     <li><b>CheckBox Icon </b>— Ends Player Turn.</li>
                                     <li><b>Condition Name </b>— Click on it to view Condition Description.</li>
@@ -4282,23 +4271,22 @@ var CombatMaster = CombatMaster || (function() {
                             <li><b>Whisper GM Only </b>— Choose whether all announcements are only sent to the GM.<br></li>
                             <li><b>Shorten Long Names </b>— Shortens the token name as displayed in the turn announcement.<br></li>
                             <li><b>Show NPC Conditions </b>— Choose whether NPC turn announcements are only sent to the GM.<br></li>
-                            <li><b>Back </b>— Return to the <a href="http://journal.roll20.net/handout/${setupID}">Setup Menu</a>.<br></li>
                         </ul>
                     </div>`
         handout.set({notes:notes}); 
     },      
 
      buildMacroMenu = function(handout,setupID) {
-        let notes = `<div class="content note-editor notes"><p>This menu is for setting up strings to substitute for various types of calls in Macros and APIs. For example, if you want CombatMaster to run a macro that would normally use @{selected|character_id}, you would need to set up a substitution string for CharID, then use that string in place of @{selected|character_id} in the macro itself.</p><p>Substitution strings work best as unique terms that won't be used elsewhere in a command or macro, otherwise CombatMaster may insert a substituted call somewhere it doesn't belong. So you'd want the TokenID substitute to be something like 'tokenidentifier' since that isn't likely to be used anywhere else, whereas 'name' is not a good substitute, because it is a word that is likely to be used in other contexts.</p><p>The PlayerID substitution string is specifically for use in TokenMod commands. If you set the PlayerID substitution to something like 'playeridentifier', then a TokenMod command in CombatMaster would look like this:</p><pre>!token-mod --api-as playeridentifier --ids tokenidentifier --on showname<br></pre><p>&lt;Image of the Macro &amp; API menu with labels&gt;</p>
+        let notes = `<div class="content note-editor notes"><p>This menu is for setting up strings to substitute for various types of calls in Macros and APIs. For example, if you want CombatMaster to run a macro that would normally use @{selected|character_id}, you would need to set up a substitution string for CharID, then use that string in place of @{selected|character_id} in the macro itself.</p><p>Substitution strings work best as unique terms that won't be used elsewhere in a command or macro, otherwise CombatMaster may insert a substituted call somewhere it doesn't belong. So you'd want the TokenID substitute to be something like 'tokenidentifier' since that isn't likely to be used anywhere else, whereas 'name' is not a good substitute, because it is a word that is likely to be used in other contexts.</p><p>The PlayerID substitution string is specifically for use in TokenMod commands. If you set the PlayerID substitution to something like 'playeridentifier', then a TokenMod command in CombatMaster would look like this:</p><pre>!token-mod --api-as playeridentifier --ids tokenidentifier --on showname<br></pre>
                         <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/133869246/jS_FTn548ahtR10wthfcZQ/original.png?15893097495">
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155094/0ZAC_3VwnVxEL_ZLfgo-iA/original.png?15953856105">
                         </p>
+                        <h4><i>Macro & API Setup</i></h4>
                         <ul>
                             <li><b>Type </b>— The type of call being substituted.<br></li>
                             <li><b>String </b>— The substitution string you have set up, for use in API commands and macros.<br></li>
                             <li><b>Delete </b>— Delete the substitution on this line.<br></li>
                             <li><b>Add Substitution </b>— Create a new substitution string.<br></li>
-                            <li><b>Back </b>— Return to the <a href="http://journal.roll20.net/handout/${setupID}">Setup Menu</a>.<br></li>
                         </ul>
                     </div>`
         handout.set({notes:notes}); 
@@ -4307,31 +4295,51 @@ var CombatMaster = CombatMaster || (function() {
      buildStatusMenu = function(handout,setupID) {
         let notes = `<div class="content note-editor notes">
                         <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/133869854/hPGbeXX6vF7A8Qk5X0JOXw/original.png?15893098865">
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155103/WF7QJJUMbfTjTjPWyd8SYQ/original.png?15953856105">
                         </p>
+                        <h4><i>Status Setup</i></h4>
                         <ul>
                             <li><b>Whisper GM Only </b>— Choose whether condition descriptions are only sent to the GM.<br></li>
                             <li><b>Player Allowed Changes </b>— When this is turned on, the player active in the turnorder receives a Menu where they can add or remove conditions from their token.<br></li>
                             <li><b>Send Changes to Chat </b>— Choose whether condition descriptions are sent to chat when a condition is added to a token.<br></li>
                             <li><b>Clear Conditions on Close </b>— Choose whether stopping combat removes conditions from all tokens.<br></li>
                             <li><b>Use Messages </b>— Enables messages to be included with conditions; will query for a message whenever a condition is added to a token.<br></li>
-                            <li><b>Back </b>— Return to the <a href="http://journal.roll20.net/handout/${setupID}">Setup Menu</a>.<br></li>
+                            <li><b>Auto Add Spells </b>— Enables Combat Master to detect spells and add them to Combat Master.  Note: Not all spells can be detected due to programming of that sheet<br></li>
+                            <li><b>Sheet </b>— Current Supported Sheets (OGL, Shaped, PF2, PF1)<br></li>
                         </ul>
                     </div>`
-        handout.set({notes:notes});             
-        
+        handout.set({notes:notes});    
     },   
+    
+    buildConcentrationMenu = function(handout,setupID) {
+         let notes = `<div class="content note-editor notes">
+                        <p>
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155091/gy3wl9H_uHBHWeQXcRk5cw/original.png?15953856105">
+                        </p>
+                        <h4><i>Concentration Setup</i></h4>
+                        <ul>
+                            <li><b>Use Concentration </b>— Enables Concentration process<br></li>
+                            <li><b>Player Allowed Changes </b>— When this is turned on, the player active in the turnorder receives a Menu where they can add or remove conditions from their token.<br></li>
+                            <li><b>Send Changes to Chat </b>— Choose whether condition descriptions are sent to chat when a condition is added to a token.<br></li>
+                            <li><b>Clear Conditions on Close </b>— Choose whether stopping combat removes conditions from all tokens.<br></li>
+                            <li><b>Use Messages </b>— Enables messages to be included with conditions; will query for a message whenever a condition is added to a token.<br></li>
+                            <li><b>Auto Add Spells </b>— Enables Combat Master to detect spells and add them to Combat Master.  Note: Not all spells can be detected due to programming of that sheet<br></li>
+                            <li><b>Sheet </b>— Current Supported Sheets (OGL, Shaped, PF2, PF1)<br></li>
+                        </ul>
+                    </div>`   
+        handout.set({notes:notes});             
+    },    
     
     buildConditionsMenu = function(handout,setupID) {
         let notes = `<div class="content note-editor notes">
                         <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/134611177/0xpq9UHzgLh1xTn-I420EA/original.png?15895052855">
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155101/zyFZLPVbsoAT7a1CI9bVEg/original.png?15953856105">
                         </p>
+                        <h4><i>Conditions Menu</i></h4>
                         <ul>
                             <li><b>Icon </b>— The default or custom token marker assigned to the condition is displayed here. If the condition uses the TokenCondition script, it will simply show "TC" here.</li><li><b>Name </b>— The name of the condition.</li>
                             <li><b>Edit </b>— Shows the <a href="http://journal.roll20.net/handout/-M5yiGl9bj-bn0V-72pd">Condition Editing Menu</a> for that condition.</li>
                             <li><b>Add Condition </b>— Create a new condition. You will first be prompted for a condition name, then it will show you the new condition's Editing Menu.<br></li>
-                            <li><b>Back </b>— Return to the <a href="http://journal.roll20.net/handout/${setupID}">Setup Menu</a>.<br></li>
                         </ul>
                     </div>`
         handout.set({notes:notes});             
@@ -4341,10 +4349,12 @@ var CombatMaster = CombatMaster || (function() {
     buildConditionMenu = function(handout,setupID) {
         let notes = `<div class="content note-editor notes">
                         <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/134612900/iNyedTd2jc2_8B_YNNZ6-A/original.png?15895057045">
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155092/bngB_blWo6C8bSBvU6ytGw/original.png?15953856105">
                         </p>
+                        <h4><i>Condition Menu</i></h4>
                         <ul>
                             <li><b>Name </b>— The name of the condition<br></li>
+                            <li><b>Type </b>— Determines if a Spell or Condition.  Set to spell if using concentration<br></li>
                             <li><b>Icon Type </b>— Determines what options are presented when clicking <b>Icon</b>.<br></li>
                             <ul>
                                 <li>CombatMaster — Lets you pick from Roll20 default markers only.</li>
@@ -4358,48 +4368,48 @@ var CombatMaster = CombatMaster || (function() {
                             <li><b>Favorites </b>— Determines if the condition shows in the Favorites menu.  This can also be set on the Main Menu.  The Favorites menu shows only conditions marked as Favorite.<br></li>
                             <li><b>Message </b>— Set a default message that will show along with the condition. It can be overridden when assigning the condition. If you have commas in the description, use brackets {{ and }} around it when entering it.<br></li>
                             <li><b>Targeted </b>— Determines if the condition applies to another token; useful for effects that affect one or more targets but have a duration based on the caster's turn. Applies the condition's marker to the target token(s). Rather than using the @{target} feature, the GM will see the following message in chat:<br>&lt;Image of the Select Targets message&gt;<br></li>
+                            <li><b>Concentration </b>— Set to true if a Spell and Spell causes concentration on the caster<br></li>
+                            <li><b>Add API </b>— Displays the Add API Menu.  Click on this if you want an external API call when adding a condition to a token(s)<br></li>
+                            <li><b>Remove API </b>— Displays the Remove API Menu.  Click on this if you want an external API call when removing a condition from a token(s)<br></li>
+                            <li><b>Edit Description </b>— Add a description to condition.  Use {{ }} if there's periods or commas in descrription<br></li>
+                            <li><b>Delete Condition </b>— Delete the condition from CombatMaster.<br></li>
                         </ul>
-                        <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/134612985/b9MAkJQSNG3-zqZw87_WTg/original.png?15895057205">
-                        </p>
-                        <ul><li><b>Adding Condition</b> — Set various external calls which will be invoked when the condition is assigned to a token. Attribute calls like @{selected|ability} and queries like ?{Query} will not work in any commands or macros. To use character IDs, character names, and token IDs for selected tokens, you must set up substitution strings in <a href="http://journal.roll20.net/handout/-M5yiExKpbk3ufyXQx1r">Macro &amp; API Setup Menu</a>. Commands for the TokenMod script must use the --ids parameter, and require the added parameter of --api-as &lt;Player ID substitution string&gt;.<br>For example:<br><pre>{{!token-mod {{--api-as playeridentifier}} {{--ids tokenidentifier}} {{--on showname}}}}</pre></li><ul><li><b>API </b>— Must be a full API command. You must use brackets {{ and }} around the command and around each parameter when entering the command. Any inline rolls must be written like [#[1d6]#] instead of [[1d6]].<br></li>
-                            <li><b>Roll20AM </b>— Must be a full Roll20AM command. You must use brackets {{ and }} around the command and around each parameter when entering the command.</li>
-                            <li><b>FX </b>— Must be a valid FX command.<br></li>
-                            <li><b>Macro </b>— Must be the full macro name (without the #). Any inline rolls within the macro must be written like [#[1d6]#] instead of [[1d6]].</li>
-                            <li><b>Persistent Macro </b>— Determines if the assigned macro is repeated at the start of an affected token's turn.<br></li>
-                        </ul>
-                        <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/134613001/7wFa0R8JQXcy6cgqS4UGDA/original.png?15895057245">
-                        </p>
-                        <li><b>Removing Condition</b> — Set various external calls which will be invoked when the condition is removed from a token. Same limitations apply as for <b>Adding Condition</b>.<br></li>
-                        <ul>
-                            <li><b>API </b>—  Must be a full API command. You must use brackets {{ and }} around the command and around each parameter when entering the command. Any inline rolls must be written like [#[1d6]#] instead of [[1d6]].</li>
-                            <li><b>Roll20AM </b>—  Must be a full Roll20AM command. You must use brackets {{ and }} around the command and around each parameter when entering the command.</li>
-                            <li><b>FX </b>—  Must be a valid FX command.</li>
-                            <li><b>Macro </b>—  Must be the full macro name (without the #). Any inline rolls within the macro must be written like [#[1d6]#] instead of [[1d6]].</li>
-                        </ul>
-                    </ul>
-                    <p>
-                        <img src="https://s3.amazonaws.com/files.d20.io/images/134613009/Cyg4DhZC68ZCHvWDu6Fb9w/original.png?15895057275">
-                    </p>
-                    <ul>
-                        <li><b>Edit Description </b>— Edit the description that will appear for the condition.<br></li>
-                        <li><b>Delete Condition </b>— Delete the condition from CombatMaster.<br></li>
-                        <li><b>Back </b>— Return to the previous menu.<br></li>
-                    </ul>
-                </div>`
+                     </div>`
                 
         handout.set({notes:notes});  
     },      
+    
+    buildAddAPIMenu = function(handout,setupID) {
+        let notes = `<div class="content note-editor notes"><p>Use the Macro & API menu to setup Substitution Strings if needed. For example, if you want CombatMaster to run a macro that would normally use @{selected|character_id}, you would need to set up a substitution string for CharID, then use that string in place of @{selected|character_id} in the macro itself.</p><p>Substitution strings work best as unique terms that won't be used elsewhere in a command or macro, otherwise CombatMaster may insert a substituted call somewhere it doesn't belong. So you'd want the TokenID substitute to be something like 'tokenidentifier' since that isn't likely to be used anywhere else, whereas 'name' is not a good substitute, because it is a word that is likely to be used in other contexts.</p><p>The PlayerID substitution string is specifically for use in TokenMod commands. If you set the PlayerID substitution to something like 'playeridentifier', then a TokenMod command in CombatMaster would look like this:</p><pre>!token-mod --api-as playeridentifier --ids tokenidentifier --on showname<br></pre>
+                        <p>
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155097/fpdZk-v1a2C7miDJmJ1NIA/original.png?15953856105">
+                        </p>`
+            notes +=    buildExternalCallMenu('<b>Add API</b>')              
 
-    buildExportMenu = function() {
+        handout.set({notes:notes});  
+    },      
+
+    buildRemoveAPIMenu = function(handout,setupID) {
+        let notes = `<div class="content note-editor notes"><p>Use the Macro & API menu to setup Substitution Strings if needed. For example, if you want CombatMaster to run a macro that would normally use @{selected|character_id}, you would need to set up a substitution string for CharID, then use that string in place of @{selected|character_id} in the macro itself.</p><p>Substitution strings work best as unique terms that won't be used elsewhere in a command or macro, otherwise CombatMaster may insert a substituted call somewhere it doesn't belong. So you'd want the TokenID substitute to be something like 'tokenidentifier' since that isn't likely to be used anywhere else, whereas 'name' is not a good substitute, because it is a word that is likely to be used in other contexts.</p><p>The PlayerID substitution string is specifically for use in TokenMod commands. If you set the PlayerID substitution to something like 'playeridentifier', then a TokenMod command in CombatMaster would look like this:</p><pre>!token-mod --api-as playeridentifier --ids tokenidentifier --on showname<br></pre>
+                        <p>
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155093/xt61MIhDuu93ZCOu7Tt8xA/original.png?15953856105">
+                        </p>`
+            notes +=    buildExternalCallMenu('<b>Remove API</b>')              
+
+        handout.set({notes:notes});  
+    },     
+    
+    buildExportMenu = function(handout) {
         let notes = `<div class="content note-editor notes">
                         <p>
-                            <img src="https://s3.amazonaws.com/files.d20.io/images/133785673/PTXJHii-M2uPHW64CjDaAA/original.png?15892938465">
+                            <img src="https://s3.amazonaws.com/files.d20.io/images/152155090/ilEH0Pon0ovgR1LMmKEAag/original.png?15953856105">
                         </p>
+                        <h4><i>Export Menu</i></h4>
                         <p>This configuration code can be copied so you can import your conditions and settings into another game with CombatMaster. Simply triple-click the code to select it entirely (this also avoids selecting anything outside the code block). Save it in a handout to easily transmogrify to other games, or save it as a file on your computer.</p>
                         <p><b>NOTE:</b> <i>If migrating from CombatMaster to another CombatMaster, it will copy the entire CombatMaster configuration.  If coming from CombatTracker, it will only copy the conditions and you’ll have to reconfigure everything else. Importing from StatusInfo is not supported.</i></p>
                     </div>`
+                    
+        handout.set({notes:notes});            
     },
     
     checkInstall = function () {
