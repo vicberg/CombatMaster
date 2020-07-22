@@ -3374,7 +3374,7 @@ var CombatMaster = CombatMaster || (function() {
 						name: 'Grappled',
 						key: 'grappled',
 						type: 'Condition',
-						description: "<p>A grappled creature's speed becomes 0, and it canÃ¢â‚¬â„¢t benefit from any bonus to its speed.</p> <p>The condition ends if the Grappler is <i>incapacitated</i>.</p> <p>The condition also ends if an effect removes the grappled creature from the reach of the Grappler or Grappling effect, such as when a creature is hurled away by the Thunderwave spell.</p>",
+						description: "<p>A grappled creature's speed becomes 0, and it can't benefit from any bonus to its speed.</p> <p>The condition ends if the Grappler is <i>incapacitated</i>.</p> <p>The condition also ends if an effect removes the grappled creature from the reach of the Grappler or Grappling effect, such as when a creature is hurled away by the Thunderwave spell.</p>",
 						icon: 'grab',
 						iconType: 'Combat Master',
 						duration: 1,
