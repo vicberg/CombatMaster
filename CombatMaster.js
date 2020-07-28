@@ -1,5 +1,5 @@
 /* 
- * Version 2.22
+ * Version 2.23
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.22',
+	    version = '2.23',
         timerObj,
         intervalHandle,
         debug = true,
@@ -106,7 +106,6 @@ var CombatMaster = CombatMaster || (function() {
 
     inputHandler = function(msg_orig) {
 
-        log(msg_orig)
         let status = state[combatState].config.status
         if (status.autoAddSpells) {
             if (status.sheet == 'OGL') {
@@ -123,8 +122,6 @@ var CombatMaster = CombatMaster || (function() {
         if (msg_orig.content.indexOf('!cmaster')!==0) {
             return;
         }
-        
-        log(msg_orig)
         
         var msg = _.clone(msg_orig),args,restrict,player
         
@@ -2785,9 +2782,7 @@ var CombatMaster = CombatMaster || (function() {
             description = RegExp.$1;  
             spellLevel = msg.content.match(/spelllevel=([^\n{}]*[^"\n{}])/)  
             spellLevel = RegExp.$1;  
-            log(spellLevel)
 
-            
             if (msg.content.includes("{{concentration=1}}")) {
                 concentrate = true
             } 
@@ -3943,7 +3938,7 @@ var CombatMaster = CombatMaster || (function() {
             state[combatState].config.conditions = combatDefaults.config.conditions;
         }
         
-        if (!state[combatState].config.conditions.hasOwnProperty('concentration')) {
+        if (!state[combatState].config.conditions.hasOwnProperty('concentration') && state[combatState].config.concentration.useConcentration) {
             state[combatState].config.conditions.concentration = combatDefaults.config.conditions.concentration;
         }
     },
