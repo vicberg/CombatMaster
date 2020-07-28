@@ -1,5 +1,5 @@
 /* 
- * Version 2.23
+ * Version 2.24
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.23',
+	    version = '2.24',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1235,6 +1235,7 @@ var CombatMaster = CombatMaster || (function() {
                 newCondition.addMacro           = defaultCondition.addMacro
                 newCondition.addPersistentMacro = defaultCondition.addPersistentMacro
                 newCondition.concentration      = defaultCondition.concentration
+                newCondition.message            = defaultCondition.message
                 newCondition.type               = defaultCondition.type
             } else {
                 newCondition.name               = key
@@ -1289,8 +1290,8 @@ var CombatMaster = CombatMaster || (function() {
                 newCondition.direction = parseInt(direction)
             }    
    
-            if (!message) {
-                newCondition.message = 'None'
+            if (!message && defaultCondition) {
+                newCondition.message = defaultCondition.message
             } else {   
                 newCondition.message = message
             }   
