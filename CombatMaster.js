@@ -1,5 +1,5 @@
 /* 
- * Version 2.24
+ * Version 2.25
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.24',
+	    version = '2.25',
         timerObj,
         intervalHandle,
         debug = true,
@@ -997,7 +997,7 @@ var CombatMaster = CombatMaster || (function() {
 
         let title        = 'Select Targets'
         let condition    = getConditionByKey(key)
-        let addButton    = makeImageButton(`!cmaster --add,condition=${key},duration=${condition.duration},direction=${condition.direction},message=${condition.message}`,tagImage,'Spell Targets','transparent',18,'white')
+        let addButton    = makeImageButton(`!cmaster --add,condition=${key},duration=${condition.duration},direction=${condition.direction}`,tagImage,'Spell Targets','transparent',18,'white')
         title           += '<div style="display:inline-block;float:right;vertical-aligh:middle">'+addButton+'</div>'     
         let contents     = 'Select target tokens to assign this spell and hit the button above when ready'
         makeAndSendMenu(contents,title,'gm');
