@@ -1,5 +1,5 @@
 /* 
- * Version 2.25
+ * Version 2.26
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.25',
+	    version = '2.26',
         timerObj,
         intervalHandle,
         debug = true,
@@ -114,6 +114,10 @@ var CombatMaster = CombatMaster || (function() {
                 }
             } else if (status.sheet == 'Shaped')  {
                 if (msg_orig && msg_orig.content.includes("{{spell=1}}")) {
+                    handleSpellCast(msg_orig)
+                }              
+            }  else if (status.sheet == 'PF2')  {
+                if (msg_orig && (msg_orig.content.includes("{spell}") || (msg_orig.content.includes("{cantrip}"))) {
                     handleSpellCast(msg_orig)
                 }              
             } 
@@ -769,7 +773,7 @@ var CombatMaster = CombatMaster || (function() {
 		]	
 
         if (status.autoAddSpells) {
-            listItems.push(makeTextButton('Sheet', status.sheet, '!cmaster --config,status,key=sheet,value=?{Sheet|D&D5E OGL,OGL|D&D5E Shaped,Shaped} --show,status'))
+            listItems.push(makeTextButton('Sheet', status.sheet, '!cmaster --config,status,key=sheet,value=?{Sheet|D&D5E OGL,OGL|D&D5E Shaped,Shaped|PF2,PF2|} --show,status'))
         }
         
 		makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');	
@@ -2787,7 +2791,6 @@ var CombatMaster = CombatMaster || (function() {
             if (msg.content.includes("{{concentration=1}}")) {
                 concentrate = true
             } 
-            log(concentrate)
             if (!spellLevel && !concentrate) {
                 return;
             }            
@@ -2799,7 +2802,12 @@ var CombatMaster = CombatMaster || (function() {
             if (msg.content.includes("CONCENTRATION")) {
                 concentrate = true
             }             
-        }   
+        } else if (status.sheet == 'PF2') {
+            spellName    = msg.content.match(/header=([^\n{}]*[^"\n{}])/);  
+            spellName    = RegExp.$1;         
+            description  = msg.content.match(/desc=([^\n{}]*[^"\n{}])/)  
+            description  = RegExp.$1;   
+        }     
 
         if (!spellName) {
             return
