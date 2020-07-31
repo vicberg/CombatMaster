@@ -1,5 +1,5 @@
 /* 
- * Version 2.26
+ * Version 2.27
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.26',
+	    version = '2.27',
         timerObj,
         intervalHandle,
         debug = true,
@@ -117,7 +117,7 @@ var CombatMaster = CombatMaster || (function() {
                     handleSpellCast(msg_orig)
                 }              
             }  else if (status.sheet == 'PF2')  {
-                if (msg_orig && (msg_orig.content.includes("{spell}") || (msg_orig.content.includes("{cantrip}"))) {
+                if (msg_orig && (msg_orig.content.includes("{spell}") || msg_orig.content.includes("{cantrip}"))) {
                     handleSpellCast(msg_orig)
                 }              
             } 
