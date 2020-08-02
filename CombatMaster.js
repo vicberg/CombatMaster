@@ -2797,7 +2797,7 @@ var CombatMaster = CombatMaster || (function() {
         } else if (status.sheet == 'Shaped') {
             spellName    = msg.content.match(/title=([^\n{}]*[^"\n{}])/);  
             spellName    = RegExp.$1;         
-            description  = msg.content.match(/content=([^\n{}]*[^"\n{}])/)  
+            description  = msg.content.match(/{{content=([^\n{}]*[^"\n{}])/)  
             description  = RegExp.$1;       
             if (msg.content.includes("CONCENTRATION")) {
                 concentrate = true
