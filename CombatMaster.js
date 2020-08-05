@@ -1,5 +1,5 @@
 /* 
- * Version 2.27
+ * Version 2.29
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.27',
+	    version = '2.29',
         timerObj,
         intervalHandle,
         debug = true,
@@ -117,7 +117,7 @@ var CombatMaster = CombatMaster || (function() {
                     handleSpellCast(msg_orig)
                 }              
             }  else if (status.sheet == 'PF2')  {
-                if (msg_orig && (msg_orig.content.includes("{spell}") || msg_orig.content.includes("{cantrip}"))) {
+                if (msg_orig && msg_orig.content.includes("{cast}")) {
                     handleSpellCast(msg_orig)
                 }              
             } 
@@ -1225,11 +1225,14 @@ var CombatMaster = CombatMaster || (function() {
 
         if (verifyCondition(tokenObj.get("_id"), key)) {
             
-            let removed = removeConditionFromToken(tokenObj, key);   
-           
+            let remove = removeConditionFromToken(tokenObj, key);   
+            log('Remove:'+remove)
+                // log('Removed:'+remove.removed)
+                // log('Targets:' +removed.target)
             newCondition.id                 = tokenObj.get("_id")
             newCondition.key                = key
-            newCondition.target             = []
+            newCondition.target             = remove.target
+            log(newCondition.target)
             newCondition.tokenConditionID   = null
             
             if (defaultCondition) {
@@ -1315,7 +1318,19 @@ var CombatMaster = CombatMaster || (function() {
                     }
                 }  
             } 
-            
+
+            if (newCondition.target.length > 0 && icon) {
+                newCondition.target.forEach((targets) => {     
+                    if (newCondition.key != 'dead') { 
+                        if (newCondition.duration >= 10) {
+                            addMarker(getObj('graphic', targets),icon)
+                        } else {
+                            addMarker(getObj('graphic', targets),icon,newCondition.duration)
+                        }
+                    }   
+                })    
+            }
+             
             if (state[combatState].config.status.sendConditions && !removed && defaultCondition) {
                 sendConditionToChat(newCondition.key)
             }  
@@ -1347,7 +1362,8 @@ var CombatMaster = CombatMaster || (function() {
         
         let removed = false
         let icon
-
+        let target = [];
+        
         [...state[combatState].conditions].forEach((condition, i) => {
             if (condition.id == tokenObj.get('_id') && condition.key == key) {
                 if (condition.iconType) {
@@ -1355,6 +1371,7 @@ var CombatMaster = CombatMaster || (function() {
                 }           
                 if (condition.hasOwnProperty('target')) {
                     if (condition.target.length > 0) {
+                        target = condition.target
                         condition.target.forEach((target, j) => {
                             if (icon) {
                                 removeMarker(getObj('graphic', target),icon)
@@ -1380,8 +1397,11 @@ var CombatMaster = CombatMaster || (function() {
                 removed = true
             }      
         });  
- 
-        return removed
+        
+        return {
+            removed,
+            target
+        }; 
     },
 
     removeTokenCondition = function (id) {
@@ -1978,9 +1998,8 @@ var CombatMaster = CombatMaster || (function() {
         }
         let turn        = getCurrentTurn()
         let marker      = getOrCreateMarker()
-        let tokenObj    = getObj('graphic', turn.id)
+        let tokenObj    = findObjs({_id:turn.id, _pageid:Campaign().get("playerpageid"), _type: 'graphic'})[0];
 
-        
         if (turn.id === '-1') { 
             doRoundCalls()
             nextTurn();
@@ -2006,7 +2025,10 @@ var CombatMaster = CombatMaster || (function() {
             changeMarker(tokenObj);
             announcePlayer(tokenObj, prev, delay);
             centerToken(tokenObj);
-            doTurnCalls(tokenObj)            
+            setTimeout(function() {
+                 doTurnCalls(tokenObj) 
+            },1000)             
+                      
         } else {
             resetMarker();
         }
@@ -2583,8 +2605,8 @@ var CombatMaster = CombatMaster || (function() {
         let config = state[combatState].config.turnorder
         let characterObj = getObj('character',tokenObj.get('represents'));
         let key, condition, ability, macro
-        
-        if (characterObj) {
+
+        if (Object.entries(characterObj).length > 0) {
             if (!['None',''].includes(config.turnMacro)) {
                 ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:config.turnMacro})[0]
                 if (ability) {
@@ -2596,14 +2618,17 @@ var CombatMaster = CombatMaster || (function() {
                     }                    
                 }
             }
+
             for (key in state[combatState].conditions) {
+
                 condition = state[combatState].conditions[key]
                 if (tokenObj.get('_id') == condition.id && condition.addPersistentMacro) {
-                    ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addPersistentMacro})[0]
+                    log ('made it')
+                    ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addMacro})[0]
                     if (ability) {
                         sendCalltoChat(tokenObj,characterObj,ability.get('action'))
                     } else {
-                        macro = findObjs({_type:'macro', name:condition.addPersistentMacro})[0]
+                        macro = findObjs({_type:'macro', name:condition.addMacro})[0]
                         if (macro) {
                             sendCalltoChat(tokenObj,characterObj,macro.get('action'))
                         }                    
@@ -2642,12 +2667,6 @@ var CombatMaster = CombatMaster || (function() {
                     sendCalltoChat(tokenObj,characterObj,macro.get('action'))
                 }   
             }
-            if (!['None',''].includes(condition.addPersistentMacro)) {
-                macro = findObjs({_type:'macro', name:condition.addPersistentMacro})[0]
-                if (macro) {
-                    sendCalltoChat(tokenObj,characterObj,macro.get('action'))
-                }    
-            }            
             if (!['None',''].includes(condition.addAPI)) {
                 sendCalltoChat(tokenObj,characterObj,condition.addAPI)
             }
@@ -2778,7 +2797,9 @@ var CombatMaster = CombatMaster || (function() {
         let description
         let concentrate     = false
         let spellLevel 
-
+        let duration        = 1
+        let durationmult
+        let direction       = 0
         
         if (status.sheet == 'OGL') {
             spellName   = msg.content.match(/name=([^\n{}]*[^"\n{}])/);  
@@ -2797,8 +2818,23 @@ var CombatMaster = CombatMaster || (function() {
         } else if (status.sheet == 'Shaped') {
             spellName    = msg.content.match(/title=([^\n{}]*[^"\n{}])/);  
             spellName    = RegExp.$1;         
-            description  = msg.content.match(/content=([^\n{}]*[^"\n{}])/)  
-            description  = RegExp.$1;       
+            description  = msg.content.match(/{{content=([^\n{}]*[^"\n{}])/);  
+            description  = RegExp.$1;
+            duration     = msg.content.match(/{{duration=.*([^\n{}]\d{1,2})_{1}([A-Z]*)[^"\n{}@][}$]/);
+            duration     = RegExp.$1;
+            durationmult = RegExp.$2;
+            if (durationmult.includes("ROUND")) {
+                durationmult = 1
+            } else if (durationmult.includes("MINUTE")) {
+                durationmult = 10
+            } else {
+                durationmult = 0 //ONLY ACCOUNT FOR ROUND AND MINUTE DURATIONS, EVERYTHING ELSE IS 0
+            }
+            if (durationmult == 0) {
+                duration = 1
+            } else {
+                duration = (duration * durationmult);
+            }    
             if (msg.content.includes("CONCENTRATION")) {
                 concentrate = true
             }             
@@ -2817,6 +2853,8 @@ var CombatMaster = CombatMaster || (function() {
             log('Spell Name:'+spellName)
             log('Description:'+description)
             log('Concentrate:'+concentrate)
+            log('Duration:'+duration)
+            log('Duration Multiplier:'+durationmult)            
         }
         if (!description) {
             description = 'None'
@@ -2825,8 +2863,13 @@ var CombatMaster = CombatMaster || (function() {
         if (status.autoAddSpells) {     
             let key = spellName.toLowerCase()
             let condition = getConditionByKey(key)
+            if (duration >= 1) {
+                direction = -1
+            }
+                else {
+                direction = 0
+            }            
             if (typeof condition == 'undefined' && !getIgnoresByKey(key)) {
-                
                 state[combatState].spells[key] = {
                 				name: spellName,
                 				key: key,
@@ -2834,8 +2877,8 @@ var CombatMaster = CombatMaster || (function() {
                 				icon: 'red',
                 				iconType: 'Combat Master',
                 				description: description,
-                				duration: 1,
-                				direction: 0,
+                				duration: duration,
+                				direction: direction,
                 				message: 'None',
                 				targeted: false,
                 				favorite: false,
