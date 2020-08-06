@@ -1,5 +1,5 @@
 /* 
- * Version 2.29
+ * Version 2.30
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.29',
+	    version = '2.30',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1331,7 +1331,7 @@ var CombatMaster = CombatMaster || (function() {
                 })    
             }
              
-            if (state[combatState].config.status.sendConditions && !removed && defaultCondition) {
+            if (state[combatState].config.status.sendConditions && !remove.removed && defaultCondition) {
                 sendConditionToChat(newCondition.key)
             }  
             if (defaultCondition && defaultCondition.targeted) {
