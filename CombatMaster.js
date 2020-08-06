@@ -2820,8 +2820,9 @@ var CombatMaster = CombatMaster || (function() {
             spellName    = RegExp.$1;         
             description  = msg.content.match(/{{content=([^\n{}]*[^"\n{}])/);  
             description  = RegExp.$1;
-            duration     = msg.content.match(/{{duration=.*([^\n{}]\d{1,2})_{1}([A-Z]*)[^"\n{}@][}$]/);
+            duration     = msg.content.match(/duration=.*(\d{1,2}[^_"\n{}]*)_{1}([A-Z]+[^"\n{}]*)/);
             duration     = RegExp.$1;
+            durationmult = msg.content.match(/duration=.*(\d{1,2}[^_"\n{}]*)_{1}([A-Z]+[^"\n{}]*)/);
             durationmult = RegExp.$2;
             if (durationmult.includes("ROUND")) {
                 durationmult = 1
@@ -2859,14 +2860,20 @@ var CombatMaster = CombatMaster || (function() {
         if (!description) {
             description = 'None'
         }
+        if (!duration) {
+            duration = 1
+        }
         
+        if (!direction) {
+            direction = 0
+        }        
         if (status.autoAddSpells) {     
             let key = spellName.toLowerCase()
             let condition = getConditionByKey(key)
             if (duration >= 1) {
                 direction = -1
             }
-                else {
+            else {
                 direction = 0
             }            
             if (typeof condition == 'undefined' && !getIgnoresByKey(key)) {
