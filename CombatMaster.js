@@ -1,5 +1,5 @@
 /* 
- * Version 2.30
+ * Version 2.31
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.30',
+	    version = '2.31',
         timerObj,
         intervalHandle,
         debug = true,
@@ -2287,6 +2287,10 @@ var CombatMaster = CombatMaster || (function() {
     announcePlayer = function (tokenObj, prev, delay=false, show) {
         if (debug) {
             log('Announce Player')
+        }
+
+        if (!tokenObj) {
+            return
         }
 
         let name        = tokenObj.get('name');
