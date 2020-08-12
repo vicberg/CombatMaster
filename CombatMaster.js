@@ -1,5 +1,5 @@
 /* 
- * Version 2.31
+ * Version 2.32
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.31',
+	    version = '2.32',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1748,6 +1748,7 @@ var CombatMaster = CombatMaster || (function() {
         let exists
         let statusmarker
         let statusmarkers
+        let condition = getConditionByMarker(marker)
         
         if (tokenObj.get('statusmarkers')) {
             statusmarkers = tokenObj.get('statusmarkers').split(',')
@@ -1774,6 +1775,8 @@ var CombatMaster = CombatMaster || (function() {
         
         tokenObj.set('statusmarkers', statusmarkers.join())
         log(tokenObj)
+        handleShapedSheet(tokenObj.get('represents'), condition.key, true);
+        
     },
 
     removeMarker = function(tokenObj, marker) {
@@ -1782,6 +1785,7 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         let statusmarkers = tokenObj.get('statusmarkers').split(',');
+        let condition = getConditionByMarker(marker);
 
         [...statusmarkers].forEach((a, i) => {
             if (a.indexOf(marker) > -1) {
@@ -1791,6 +1795,7 @@ var CombatMaster = CombatMaster || (function() {
 
         tokenObj.set('statusmarkers', statusmarkers.join())
         log(tokenObj)
+        handleShapedSheet(tokenObj.get('represents'), condition.key, false);
         
     },
     
@@ -2824,9 +2829,9 @@ var CombatMaster = CombatMaster || (function() {
             spellName    = RegExp.$1;         
             description  = msg.content.match(/{{content=([^\n{}]*[^"\n{}])/);  
             description  = RegExp.$1;
-            duration     = msg.content.match(/duration=.*(\d{1,2}[^_"\n{}]*)_{1}([A-Z]+[^"\n{}]*)/);
+            duration     = msg.content.match(/duration=[^}\d]*([0-9]+)_([A-Z]+[^"\n{}_ ])/);
             duration     = RegExp.$1;
-            durationmult = msg.content.match(/duration=.*(\d{1,2}[^_"\n{}]*)_{1}([A-Z]+[^"\n{}]*)/);
+            durationmult = msg.content.match(/duration=[^}\d]*([0-9]+)_([A-Z]+[^"\n{}_ ])/);
             durationmult = RegExp.$2;
             if (durationmult.includes("ROUND")) {
                 durationmult = 1
@@ -2913,11 +2918,17 @@ var CombatMaster = CombatMaster || (function() {
             }  else if (condition) {
                 targetedSpell(key)
                 if (concentration.useConcentration && concentrate == true && condition.override == false) {     
-                    let characterName   = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);            
+                    if (status.sheet == 'OGL') {
+                    let characterName = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);
                     characterName       = RegExp.$1;
+                    }
+                    else if (status.sheet == 'Shaped') {
+                    let characterName = msg.content.match(/{{character_name=([\w\d ]+[^"\n{}]?)/);
+                    characterName       = RegExp.$1;
+                    }
                     let characterID     = findObjs({ name: characterName, _type: 'character' }).shift().get('id')    
                     let tokenObj        = findObjs({ represents: characterID, _pageid:Campaign().get("playerpageid"), _type: 'graphic' })[0]
-                    addConditionToToken(tokenObj,'concentration',condition.duration,condition.direction,'Concentrating on ' + spellName)
+                    addConditionToToken(tokenObj,'concentration',condition.duration,condition.direction,'Concentrating on ' +spellName)
                 }                   
             }
         }
