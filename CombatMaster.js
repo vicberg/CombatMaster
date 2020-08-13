@@ -2918,13 +2918,14 @@ var CombatMaster = CombatMaster || (function() {
             }  else if (condition) {
                 targetedSpell(key)
                 if (concentration.useConcentration && concentrate == true && condition.override == false) {     
+                    let characterName
                     if (status.sheet == 'OGL') {
-                    let characterName = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);
-                    characterName       = RegExp.$1;
+                        characterName = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);
+                        characterName = RegExp.$1;
                     }
                     else if (status.sheet == 'Shaped') {
-                    let characterName = msg.content.match(/{{character_name=([\w\d ]+[^"\n{}]?)/);
-                    characterName       = RegExp.$1;
+                        characterName = msg.content.match(/{{character_name=([\w\d ]+[^"\n{}]?)/);
+                        characterName = RegExp.$1;
                     }
                     let characterID     = findObjs({ name: characterName, _type: 'character' }).shift().get('id')    
                     let tokenObj        = findObjs({ represents: characterID, _pageid:Campaign().get("playerpageid"), _type: 'graphic' })[0]
