@@ -2380,11 +2380,11 @@ var CombatMaster = CombatMaster || (function() {
                             // addMarker(getObj('graphic', targets),condition.iconType,condition.icon,condition.duration,condition.direction,condition.key)
                             addConditionToToken(tokenObj,condition.key,condition.duration,condition.direction,condition.message)
                         }   
-			if (condition.hasOwnProperty('message') {
-				if (condition.message != 'None' && condition.message.length > 0) {
-				    output += '<div style="display:inline-block;"><strong>Message: </strong>'+condition.message + '</div>';
-				}    
-		        }    
+			            if (condition.hasOwnProperty('message')) {
+				            if (condition.message != 'None' && condition.message.length > 0) {
+				                output += '<div style="display:inline-block;"><strong>Message: </strong>'+condition.message + '</div>';
+				            }    
+		                }    
                     } else if (condition.direction == 0) {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> '+condition.duration+' Permanent</div>';
                         if (condition.message != 'None' && condition.message.length > 0) {
