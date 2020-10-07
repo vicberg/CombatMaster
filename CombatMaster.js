@@ -4533,6 +4533,8 @@ var CombatMaster = CombatMaster || (function() {
         CheckInstall: checkInstall,
         RegisterEventHandlers: registerEventHandlers,
         ObserveTokenChange: observeTokenChange,
+        addConditionToToken,
+        removeConditionFromToken,
         getConditions,
         getConditionByKey,
         sendConditionToChat,
