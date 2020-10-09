@@ -4535,6 +4535,7 @@ var CombatMaster = CombatMaster || (function() {
         ObserveTokenChange: observeTokenChange,
         addConditionToToken,
         removeConditionFromToken,
+	addTargetsToCondition,
         getConditions,
         getConditionByKey,
         sendConditionToChat,
