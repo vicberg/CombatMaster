@@ -1,5 +1,5 @@
 /* 
- * Version 2.34
+ * Version 2.35
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.34',
+	    version = '2.35',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1203,13 +1203,18 @@ var CombatMaster = CombatMaster || (function() {
             log('Remove Condition')
         }
 
+        let condition = getConditionByKey(cmdDetails.details.condition)
+        
         if (cmdDetails.details.id) {
             let token = getObj('graphic', cmdDetails.details.id)
-            removeConditionFromToken(token, cmdDetails.details.condition)  
+            removeConditionFromToken(token, condition.key)  
         } else if (selectedTokens) {
         	selectedTokens.forEach(token => {
         	    if (token._type == 'graphic') {
-    			    removeConditionFromToken(getObj(token._type, token._id), cmdDetails.details.condition)  
+    			    removeConditionFromToken(getObj(token._type, token._id), condition.key)  
+    			    if (!condition.targeted || (condition.targeted && condition.targetedAPI == 'casterTargets')) {
+    			        doRemoveConditionCalls(tokenObj,condition.key)
+    			    }        			    
         	    }    
         	});	 	
         }	
@@ -1386,10 +1391,6 @@ var CombatMaster = CombatMaster || (function() {
                     let concentration = getConditionByKey('concentration')
                     removeMarker(tokenObj, concentration.iconType, concentration.icon)                    
                 }   
-
-			    if (!condition.targeted || (condition.targeted && condition.targetedAPI == 'casterTargets')) {
-			        doRemoveConditionCalls(tokenObj,condition.key)
-			    }            
 			    
                 state[combatState].conditions.splice(i,1)
                 removed = true
