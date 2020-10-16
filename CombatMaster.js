@@ -1207,14 +1207,11 @@ var CombatMaster = CombatMaster || (function() {
         
         if (cmdDetails.details.id) {
             let token = getObj('graphic', cmdDetails.details.id)
-            removeConditionFromToken(token, condition.key)  
+            removeConditionFromToken(token, condition.key, true)  
         } else if (selectedTokens) {
         	selectedTokens.forEach(token => {
         	    if (token._type == 'graphic') {
-    			    removeConditionFromToken(getObj(token._type, token._id), condition.key)  
-    			    if (!condition.targeted || (condition.targeted && condition.targetedAPI == 'casterTargets')) {
-    			        doRemoveConditionCalls(tokenObj,condition.key)
-    			    }        			    
+    			    removeConditionFromToken(getObj(token._type, token._id), condition.key, true)  
         	    }    
         	});	 	
         }	
@@ -1234,7 +1231,7 @@ var CombatMaster = CombatMaster || (function() {
 
         if (verifyCondition(tokenObj.get("_id"), key)) {
             
-            let remove = removeConditionFromToken(tokenObj, key);   
+            let remove = removeConditionFromToken(tokenObj, key, false);   
 
             newCondition.id                 = tokenObj.get("_id")
             newCondition.key                = key
@@ -1350,7 +1347,7 @@ var CombatMaster = CombatMaster || (function() {
         return;
     },
     
-    removeConditionFromToken = function(tokenObj,key) {
+    removeConditionFromToken = function(tokenObj,key,removeAPI) {
         if (debug) {
             log('Remove Condition From Token')
         } 
@@ -1386,16 +1383,21 @@ var CombatMaster = CombatMaster || (function() {
                 } else {            
                     removeMarker(tokenObj, condition.iconType, condition.icon)
                 }  
-
                 if (condition.concentration == true) {
                     let concentration = getConditionByKey('concentration')
                     removeMarker(tokenObj, concentration.iconType, concentration.icon)                    
                 }   
+			    if (!condition.targeted || (condition.targeted && condition.targetedAPI == 'casterTargets')) {
+			        if (removeAPI) {
+			            doRemoveConditionCalls(tokenObj,condition.key)
+			        }       
+			    }  
 			    
                 state[combatState].conditions.splice(i,1)
                 removed = true
             }      
         });  
+ 
         
         return {
             removed,
@@ -1554,7 +1556,7 @@ var CombatMaster = CombatMaster || (function() {
         if (state[combatState].config.status.clearConditions) {
             [...state[combatState].conditions].forEach((condition) => {
                 if (condition.id != getOrCreateMarker(true).get('id') && condition.id != getOrCreateMarker(false).get('id')) {
-                    removeConditionFromToken(getObj('graphic',condition.id), condition.key)
+                    removeConditionFromToken(getObj('graphic',condition.id), condition.key, true)
                 }  
             }) 
         }           
@@ -1585,7 +1587,7 @@ var CombatMaster = CombatMaster || (function() {
         if (state[combatState].config.status.clearConditions) {
             [...state[combatState].conditions].forEach((condition) => {
                 if (condition.id != getOrCreateMarker(true).get('id') && condition.id != getOrCreateMarker(false).get('id')) {
-                    removeConditionFromToken(getObj('graphic',condition.id), condition.key)
+                    removeConditionFromToken(getObj('graphic',condition.id), condition.key, true)
                 }  
             }) 
         }   
@@ -1943,7 +1945,7 @@ var CombatMaster = CombatMaster || (function() {
                         let condition = getConditionByMarker(marker);
                         if(!condition) return;
                         if(marker !== '' && !newstatusmarkers.includes(marker)){
-                            removeConditionFromToken(obj, condition.key);
+                            removeConditionFromToken(obj, condition.key, true);
                         }
                     })
                 }    
@@ -2371,7 +2373,7 @@ var CombatMaster = CombatMaster || (function() {
                     if (condition.duration <= 0 && condition.direction != 0) {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> removed</div>';
                         if (!delay && !show) {
-                            removeConditionFromToken(tokenObj, condition.key);  
+                            removeConditionFromToken(tokenObj, condition.key, true); 
                             removed = true
                         }    
                     } else if (condition.duration > 0 && condition.direction != 0) {
