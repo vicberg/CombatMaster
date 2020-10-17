@@ -1,5 +1,5 @@
 /* 
- * Version 2.35
+ * Version 2.36
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.35',
+	    version = '2.36',
         timerObj,
         intervalHandle,
         debug = true,
@@ -4400,12 +4400,12 @@ var CombatMaster = CombatMaster || (function() {
                         <h4><i>Concentration Setup</i></h4>
                         <ul>
                             <li><b>Use Concentration </b>— Enables Concentration process<br></li>
-                            <li><b>Player Allowed Changes </b>— When this is turned on, the player active in the turnorder receives a Menu where they can add or remove conditions from their token.<br></li>
-                            <li><b>Send Changes to Chat </b>— Choose whether condition descriptions are sent to chat when a condition is added to a token.<br></li>
-                            <li><b>Clear Conditions on Close </b>— Choose whether stopping combat removes conditions from all tokens.<br></li>
-                            <li><b>Use Messages </b>— Enables messages to be included with conditions; will query for a message whenever a condition is added to a token.<br></li>
+                            <li><b>Add Marker </b>— Automatically adds your concentration marker to token.  Concentration spell has to exist in Combat Master<br></li>
+                            <li><b>Check for Save </b>— Notifies that a save is needed when damage is applies and concentration exists on token<br></li>
+                            <li><b>Notify </b>— Notify everyone or GM when concentration save is needed<br></li>
+                            <li><b>Wound Bar </b>— Identifies which bar in the token is tracking wounds for purposes of concentration save and notification<br></li>
                             <li><b>Auto Add Spells </b>— Enables Combat Master to detect spells and add them to Combat Master.  Note: Not all spells can be detected due to programming of that sheet<br></li>
-                            <li><b>Sheet </b>— Current Supported Sheets (OGL, Shaped, PF2, PF1)<br></li>
+                            <li><b>Sheet </b>— Current Supported Character Sheet (OGL, Shaped, PF2, PF1)<br></li>
                         </ul>
                     </div>`   
         handout.set({notes:notes});             
