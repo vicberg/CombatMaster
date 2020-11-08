@@ -1,5 +1,5 @@
 /* 
- * Version 2.36
+ * Version 2.37
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.36',
+	    version = '2.37',
         timerObj,
         intervalHandle,
         debug = true,
@@ -2609,43 +2609,46 @@ var CombatMaster = CombatMaster || (function() {
         let characterObj = getObj('character',tokenObj.get('represents'));
         let key, condition, ability, macro
 
-        if (Object.entries(characterObj).length > 0) {
-            if (!['None',''].includes(config.turnMacro)) {
-                ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:config.turnMacro})[0]
-                if (ability) {
-                    sendCalltoChat(tokenObj,characterObj,ability.get('action'))
-                } else {
-                    macro = findObjs({_type:'macro', name:config.turnMacro})[0]
-                    if (macro) {
-                        sendCalltoChat(tokenObj,characterObj,macro.get('action'))
-                    }                    
-                }
-            }
-
-            for (key in state[combatState].conditions) {
-                condition = state[combatState].conditions[key]
-                if (tokenObj.get('_id') == condition.id && condition.addPersistentMacro) {
-                    ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addMacro})[0]
+        if (characterObj) {
+            if (Object.entries(characterObj).length > 0) {
+                if (!['None',''].includes(config.turnMacro)) {
+                    ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:config.turnMacro})[0]
                     if (ability) {
                         sendCalltoChat(tokenObj,characterObj,ability.get('action'))
                     } else {
-                        macro = findObjs({_type:'macro', name:condition.addMacro})[0]
+                        macro = findObjs({_type:'macro', name:config.turnMacro})[0]
                         if (macro) {
                             sendCalltoChat(tokenObj,characterObj,macro.get('action'))
                         }                    
                     }
                 }
+    
+                for (key in state[combatState].conditions) {
+                    condition = state[combatState].conditions[key]
+                    if (tokenObj.get('_id') == condition.id && condition.addPersistentMacro) {
+                        ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addMacro})[0]
+                        if (ability) {
+                            sendCalltoChat(tokenObj,characterObj,ability.get('action'))
+                        } else {
+                            macro = findObjs({_type:'macro', name:condition.addMacro})[0]
+                            if (macro) {
+                                sendCalltoChat(tokenObj,characterObj,macro.get('action'))
+                            }                    
+                        }
+                    }
+                }
+                if (!['None',''].includes(config.turnAPI)) {
+                    sendCalltoChat(tokenObj,characterObj,config.turnAPI)
+                }
+                if (!['None',''].includes(config.turnRoll20AM)) {
+                    sendCalltoChat(tokenObj,characterObj,config.roundRoll20AM)
+                }          
+                if (!['None',''].includes(config.turnFX)) {
+                    doFX(tokenObj,config.turnFX)
+                }                     
             }
-            if (!['None',''].includes(config.turnAPI)) {
-                sendCalltoChat(tokenObj,characterObj,config.turnAPI)
-            }
-            if (!['None',''].includes(config.turnRoll20AM)) {
-                sendCalltoChat(tokenObj,characterObj,config.roundRoll20AM)
-            }          
-            if (!['None',''].includes(config.turnFX)) {
-                doFX(tokenObj,config.turnFX)
-            }                     
-        }
+            
+        }        
     },
  
     doAddConditionCalls = function (tokenObj,key) {
