@@ -1,5 +1,5 @@
 /* 
- * Version 2.37
+ * Version 2.38
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.37',
+	    version = '2.38',
         timerObj,
         intervalHandle,
         debug = true,
@@ -110,6 +110,7 @@ var CombatMaster = CombatMaster || (function() {
         if (status.autoAddSpells) {
             if (status.sheet == 'OGL') {
                 if (msg_orig && (msg_orig.rolltemplate && msg_orig.rolltemplate === 'spell') ) {
+                    log(msg_orig)
                     handleSpellCast(msg_orig)
                 }
             } else if (status.sheet == 'Shaped')  {
@@ -2806,16 +2807,17 @@ var CombatMaster = CombatMaster || (function() {
         let direction       = 0
         
         if (status.sheet == 'OGL') {
-            spellName   = msg.content.match(/name=([^\n{}]*[^"\n{}])/);  
-            spellName   = RegExp.$1;     
-            description = msg.content.match(/description=([^\n{}]*[^"\n{}])/)  
-            description = RegExp.$1;  
-            spellLevel = msg.content.match(/spelllevel=([^\n{}]*[^"\n{}])/)  
-            spellLevel = RegExp.$1;  
-
+            spellName    = msg.content.match(/name=([^\n{}]*[^"\n{}])/);  
+            spellName    = RegExp.$1;     
+            description  = msg.content.match(/description=([^\n{}]*[^"\n{}])/)  
+            description  = RegExp.$1;  
+            spellLevel   = msg.content.match(/spelllevel=([^\n{}]*[^"\n{}])/)  
+            spellLevel   = RegExp.$1;  
+            durationmult = 1
             if (msg.content.includes("{{concentration=1}}")) {
                 concentrate = true
             } 
+
             if (!spellLevel && !concentrate) {
                 return;
             }            
