@@ -3191,7 +3191,8 @@ var CombatMaster = CombatMaster || (function() {
                 '}' : '&'+'#125'+';',
                 '[' : '&'+'#91'+';',
                 ']' : '&'+'#93'+';',
-                '"' : '&'+'quot'+';'
+                '"' : '&'+'quot'+';',
+                "&" : '&'+'amp'+';'
             },
             re=new RegExp('('+_.map(_.keys(entities),esRE).join('|')+')','g');
         return function(s){
