@@ -1,5 +1,5 @@
 /* 
- * Version 2.38
+ * Version 2.39
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.38',
+	    version = '2.39',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1204,15 +1204,12 @@ var CombatMaster = CombatMaster || (function() {
             log('Remove Condition')
         }
 
-        let condition = getConditionByKey(cmdDetails.details.condition)
-        
         if (cmdDetails.details.id) {
-            let token = getObj('graphic', cmdDetails.details.id)
-            removeConditionFromToken(token, condition.key, true)  
+            removeConditionFromToken(getObj('graphic', cmdDetails.details.id), cmdDetails.details.condition, true)  
         } else if (selectedTokens) {
         	selectedTokens.forEach(token => {
         	    if (token._type == 'graphic') {
-    			    removeConditionFromToken(getObj(token._type, token._id), condition.key, true)  
+    			    removeConditionFromToken(getObj(token._type, token._id),cmdDetails.details.condition, true)  
         	    }    
         	});	 	
         }	
@@ -1371,7 +1368,7 @@ var CombatMaster = CombatMaster || (function() {
                                 removeTokenCondition(condition.tokenConditionID)
                             } else {
                                 removeMarker(getObj('graphic', target), condition.iconType, condition.icon)
-                			    if (condition.targeted) {
+                			    if (condition.targeted && removeAPI) {
                 			        doRemoveConditionCalls(getObj('graphic', target),condition.key)
                 			    }                                    
                             }  
@@ -1420,6 +1417,10 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         let condition = getConditionByKey(key)
+        if (!condition) {
+            return
+        }
+        
         let icon
         if (['Combat Master','Token Marker'].includes(condition.iconType)) {
             icon  = getDefaultIcon(condition.iconType,condition.icon, 'margin-right: 5px; margin-top: 5px; display: inline-block;');
@@ -1530,17 +1531,8 @@ var CombatMaster = CombatMaster || (function() {
 
         round = hold.round;
         setTurnorder(hold.turnorder);
+        state[combatState].conditions = hold.conditions
 
-        let tokenObj
-        let icon
-
-        [...hold.conditions].forEach((condition, i) => {
-            tokenObj = getObj('graphic', condition.id)
-            if (tokenObj) {
-                addConditionToToken(tokenObj,condition.key,condition.duration,condition.direction,condition.message);
-            } 
-        }) 
- 
         setTimeout(function() {
             clearHold(hold)
             sendMainMenu(who)
@@ -1584,16 +1576,7 @@ var CombatMaster = CombatMaster || (function() {
         hold.turnorder  = getTurnorder();
         hold.round      = round;
         hold.conditions = [...state[combatState].conditions]
-        
-        if (state[combatState].config.status.clearConditions) {
-            [...state[combatState].conditions].forEach((condition) => {
-                if (condition.id != getOrCreateMarker(true).get('id') && condition.id != getOrCreateMarker(false).get('id')) {
-                    removeConditionFromToken(getObj('graphic',condition.id), condition.key, true)
-                }  
-            }) 
-        }   
-        
-        
+
         Campaign().set({initiativepage:false,turnorder:''});     
         pauseTimer()
             
@@ -2357,31 +2340,37 @@ var CombatMaster = CombatMaster || (function() {
         let descriptionButton
         let removed = false
         let output = '<div>'
+        let target     
         
         if (state[combatState].conditions) {
             [... state[combatState].conditions].forEach(condition => {
-                if (condition.id ==  tokenObj.get("_id")) {
-                    descriptionButton = makeButton(condition.name, '!cmaster --show,description,key='+condition.key) 
+                if (condition.id == tokenObj.get("_id") || condition.target.includes(tokenObj.get("_id"))) {
+                    if (condition.target.includes(tokenObj.get("_id"))){
+                        target = true
+                    }    
                     
-                    if (!delay && !show) {
-                        if (!prev) {
-                            condition.duration = condition.duration + condition.direction
-                        } else {
-                            condition.duration = condition.duration - condition.direction
-                        }
+                    descriptionButton = makeButton(condition.name, '!cmaster --show,description,key='+condition.key) 
+                    if (!target) {
+                        if (!delay && !show) {
+                            if (!prev) {
+                                condition.duration = condition.duration + condition.direction
+                            } else {
+                                condition.duration = condition.duration - condition.direction
+                            }
+                        }    
                     }    
                     
                     if (condition.duration <= 0 && condition.direction != 0) {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> removed</div>';
-                        if (!delay && !show) {
+                        if (!delay && !show && !target) {
                             removeConditionFromToken(tokenObj, condition.key, true); 
                             removed = true
                         }    
                     } else if (condition.duration > 0 && condition.direction != 0) {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> '+condition.duration+' Rounds Left</div>';
 
-                        if (!delay && !show) {
-                            // addMarker(getObj('graphic', targets),condition.iconType,condition.icon,condition.duration,condition.direction,condition.key)
+                        if (!delay && !show && !target) {
+                            // addMarker(tokenObj, condition.iconType, condition.icon, condition.duration, condition.direction, condition.key)
                             addConditionToToken(tokenObj,condition.key,condition.duration,condition.direction,condition.message)
                         }   
 			            if (condition.hasOwnProperty('message')) {
@@ -2391,8 +2380,10 @@ var CombatMaster = CombatMaster || (function() {
 		                }    
                     } else if (condition.direction == 0) {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> '+condition.duration+' Permanent</div>';
-                        if (condition.message != 'None' && condition.message.length > 0) {
-                            output += '<div style="display:inline-block;"<strong>Message: </strong> '+condition.message+ '</div>';
+                        if (condition.hasOwnProperty('message')) {
+                            if (condition.message != 'None' && condition.message.length > 0) {
+                                output += '<div style="display:inline-block;"<strong>Message: </strong> '+condition.message+ '</div>';
+                            }  
                         }    
                     }
                     
@@ -2400,7 +2391,8 @@ var CombatMaster = CombatMaster || (function() {
                         removeButton  = makeImageButton('!cmaster --remove,condition='+condition.key+',id='+tokenObj.get("_id"),deleteImage,'Remove Condition','transparent',18)
                         output += '<div style="display:inline-block;float:right;vertical-aligh:middle">'+removeButton+'</div>'
                     }
-                }    
+                }   
+
             })
         }  
         output += '</div>'
