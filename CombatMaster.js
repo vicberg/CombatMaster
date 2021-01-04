@@ -1,5 +1,5 @@
 /* 
- * Version 2.39
+ * Version 2.40
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.39',
+	    version = '2.40',
         timerObj,
         intervalHandle,
         debug = true,
@@ -110,7 +110,9 @@ var CombatMaster = CombatMaster || (function() {
         if (status.autoAddSpells) {
             if (status.sheet == 'OGL') {
                 if (msg_orig && (msg_orig.rolltemplate && msg_orig.rolltemplate === 'spell') ) {
-                    log(msg_orig)
+                    if (debug) {
+                        log(msg_orig)
+                    }    
                     handleSpellCast(msg_orig)
                 }
             } else if (status.sheet == 'Shaped')  {
@@ -566,7 +568,7 @@ var CombatMaster = CombatMaster || (function() {
 
         state[combatState].config.previousPage = 'main'
         
-        if (state[combatState].config.status.access && who != 'None') {
+        if (state[combatState].config.status.access && who != 'None' && who != 'gm') {
             let playerIDs = state[combatState].config.status.access.split(',');
             playerIDs.forEach((player) => {
                 makeAndSendMenu(contents+makeList(listItems)+viewButton,titleText,player);    
@@ -1758,16 +1760,15 @@ var CombatMaster = CombatMaster || (function() {
              return
         }
         
-        let icon = getIconTag(markerType, marker)
-        if (!icon) {
+        let iconTag = getIconTag(markerType, marker)
+        if (!iconTag) {
             return
         }
         
         let statusMarkers = returnMarkers(tokenObj)
         
-        log(statusMarkers);    
         statusMarkers.forEach((a, i) => {
-            if (a.indexOf(marker) > -1) {
+            if (a.indexOf(iconTag) > -1) {
                 statusMarkers.splice(i,1)
             }  
         });       
