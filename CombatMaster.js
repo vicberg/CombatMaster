@@ -1,5 +1,5 @@
 /* 
- * Version 2.40
+ * Version 2.41
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.40',
+	    version = '2.41',
         timerObj,
         intervalHandle,
         debug = true,
@@ -105,7 +105,7 @@ var CombatMaster = CombatMaster || (function() {
     combatState = 'COMBATMASTER',
 
     inputHandler = function(msg_orig) {
-
+        
         let status = state[combatState].config.status
         if (status.autoAddSpells) {
             if (status.sheet == 'OGL') {
@@ -1562,7 +1562,7 @@ var CombatMaster = CombatMaster || (function() {
         round = 1;
         
         setTimeout(function() {
-            sendMainMenu(who)
+            sendMainMenu(who ? who : 'gm')
             state[combatState].conditions = [];
         },2000)         
         
@@ -1789,7 +1789,7 @@ var CombatMaster = CombatMaster || (function() {
         
         marker.set({
             name: (next) ? 'NextMarker' : 'Round ' + round,
-            imgsrc: (next) ? turnorder.nextExternalMarkerURL : turnorder.externalMarkerURL,
+            imgsrc: (next) ? getCleanImgsrc(turnorder.nextExternalMarkerURL) : getCleanImgsrc(turnorder.externalMarkerURL),
             pageid: Campaign().get('playerpageid'),
             layer: 'gmlayer',
             left: 35, top: 35,
@@ -1813,8 +1813,8 @@ var CombatMaster = CombatMaster || (function() {
 		} else {
 			imgsrc = (next) ? turnorder.nextTokenMarkerURL : turnorder.tokenMarkerURL		
 		}
-        
- 		let markers = (next) ? findObjs({pageid,imgsrc,name: 'NextMarker'}) : findObjs({pageid,imgsrc});
+
+ 		let markers = (next) ? findObjs({pageid,imgsrc:getCleanImgsrc(imgsrc),name: 'NextMarker'}) : findObjs({pageid,imgsrc:getCleanImgsrc(imgsrc)});
         
         markers.forEach((marker, i) => {
             if(i > 0 && !next) marker.remove();
@@ -1824,8 +1824,8 @@ var CombatMaster = CombatMaster || (function() {
         if(!marker) {
             marker = createObj('graphic', {
                 name: (next) ? 'NextMarker' : 'Round 1',
-                imgsrc,
-                pageid,
+                imgsrc: getCleanImgsrc(imgsrc),
+                pageid: pageid,
                 layer: 'gmlayer',
                 showplayers_name: true,
                 left: 35, top: 35,
@@ -1870,7 +1870,7 @@ var CombatMaster = CombatMaster || (function() {
         if (debug) {
             log('Change Marker')
         }
-        
+
         if(!token){
             resetMarker(next);
             return;
@@ -1963,10 +1963,8 @@ var CombatMaster = CombatMaster || (function() {
 
         if (turnorder.length == 0) {
             makeAndSendMenu('The Turnorder is empty.  Combat not started',null,'gm');
-            stopCombat()
             return false
         }
-        
         return true
     },
     
@@ -1983,6 +1981,7 @@ var CombatMaster = CombatMaster || (function() {
         let marker      = getOrCreateMarker()
         let tokenObj    = findObjs({_id:turn.id, _pageid:Campaign().get("playerpageid"), _type: 'graphic'})[0];
 
+        
         if (turn.id === '-1') { 
             doRoundCalls()
             nextTurn();
@@ -3105,10 +3104,16 @@ var CombatMaster = CombatMaster || (function() {
 
     handeIniativePageChange = function (obj,prev) {
         if((obj.get('initiativepage') !== prev.initiativepage && !obj.get('initiativepage'))){
-            //stopCombat();
+            stopCombat();
         }
     },
 
+    handlePlayerPageChange = function (obj,prev) {
+        if((obj.get('playerpageid') !== prev.playerpageid) && obj.get('playerpageid') != obj.get('initiativepage')){
+            sendChat('',`/w gm 'You are on a page that isn't the player ribbon page.  Token Morkers will not work.`)
+        }
+    },
+    
     observeTokenChange = function(handler){
         if(handler && _.isFunction(handler)){
             observers.tokenChange.push(handler);
@@ -4507,6 +4512,7 @@ var CombatMaster = CombatMaster || (function() {
         on('change:campaign:turnorder', handleTurnorderChange);
         on('change:graphic:statusmarkers', handleStatusMarkerChange);
         on('change:campaign:initiativepage', handeIniativePageChange);
+        on('change:campaign:playerpageid', handlePlayerPageChange);
         on('change:graphic:top', handleGraphicMovement);
         on('change:graphic:left', handleGraphicMovement);
         on('change:graphic:layer', handleGraphicMovement);
@@ -4537,7 +4543,7 @@ var CombatMaster = CombatMaster || (function() {
         ObserveTokenChange: observeTokenChange,
         addConditionToToken,
         removeConditionFromToken,
-	addTargetsToCondition,
+	    addTargetsToCondition,
         getConditions,
         getConditionByKey,
         sendConditionToChat,
