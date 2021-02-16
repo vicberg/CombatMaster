@@ -1,5 +1,5 @@
 /* 
- * Version 2.41
+ * Version 2.40
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.41',
+	    version = '2.40',
         timerObj,
         intervalHandle,
         debug = true,
@@ -3277,7 +3277,7 @@ var CombatMaster = CombatMaster || (function() {
 					allRoundMacro: 'None',					
                 },
                 timer: {
-                    useTimer: true,
+                    useTimer: false,
                     time: 120,
                     skipTurn: true,
                     sendTimerToChat: true,
