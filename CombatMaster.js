@@ -3109,9 +3109,7 @@ var CombatMaster = CombatMaster || (function() {
     },
 
     handlePlayerPageChange = function (obj,prev) {
-        if((obj.get('playerpageid') !== prev.playerpageid) && obj.get('playerpageid') != obj.get('initiativepage')){
-            sendChat('',`/w gm 'You are on a page that isn't the player ribbon page.  Token Morkers will not work.`)
-        }
+
     },
     
     observeTokenChange = function(handler){
