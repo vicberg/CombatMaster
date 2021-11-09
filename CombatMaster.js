@@ -1,5 +1,5 @@
 /* 
- * Version 2.42
+ * Version 2.44
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,11 +11,11 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.42',
+	    version = '2.45',
         timerObj,
         intervalHandle,
-        debug = true,
-        rotationInterval,
+        animationHandle,
+        debug = false,
         paused = false,
         who = 'gm',
         playerID = null,
@@ -105,7 +105,7 @@ var CombatMaster = CombatMaster || (function() {
     combatState = 'COMBATMASTER',
 
     inputHandler = function(msg_orig) {
-        
+
         let status = state[combatState].config.status
         if (status.autoAddSpells) {
             if (status.sheet == 'OGL') {
@@ -442,14 +442,16 @@ var CombatMaster = CombatMaster || (function() {
 
     clearTokenStatuses = function(selectedTokens) {
         let tokenObj
-        selectedTokens.forEach(token => {    
-            if (token._type == 'graphic') {
-                tokenObj        = getObj('graphic', token._id)    
-                if (tokenObj) {
-                    tokenObj.set('statusmarkers', "")
+        if (selectedTokens ) {
+            selectedTokens.forEach(token => {
+                if (token._type == 'graphic') {
+                    tokenObj        = getObj('graphic', token._id);
+                    if (tokenObj) {
+                        tokenObj.set('statusmarkers', "")
+                    }
                 }
-            }
-        })    
+            })    
+        }
     },
     
 //*************************************************************************************************************
@@ -693,7 +695,10 @@ var CombatMaster = CombatMaster || (function() {
 		    listItems.push(makeTextButton('Next Marker Name',turnorder.nextTokenMarkerName, '!cmaster --config,turnorder,key=nextTokenMarkerName,value=?{Next Marker Name|} --show,turnorder'))
             listItems.push(getDefaultIcon('Token Marker', turnorder.nextTokenMarkerName))
 		}	
-        
+    	listItems.push(makeTextButton('Marker Size',turnorder.markerSize, '!cmaster --config,turnorder,key=markerSize,value=?{Marker Size (1.35 default)} --show,turnorder'))      
+        listItems.push(makeTextButton('Animate Marker',turnorder.animateMarker, '!cmaster --config,turnorder,key=animateMarker,value='+!turnorder.animateMarker + ' --show,turnorder'))    	  
+    	listItems.push(makeTextButton('Animation Angle Step',turnorder.animateMarkerDegree, '!cmaster --config,turnorder,key=animateMarkerDegree,value=?{Degrees to rotate every tick (15 default)} --show,turnorder'))      
+    	listItems.push(makeTextButton('Animation Angle Wait',turnorder.animateMarkerWait, '!cmaster --config,turnorder,key=animateMarkerWait,value=?{milliseconds per tick (250 default)} --show,turnorder'))         
 		listItems.push('<div style="margin-top:3px"><i><b>Beginning of Each Round</b></i></div>' )
         listItems.push(makeTextButton('API',turnorder.roundAPI, '!cmaster --config,turnorder,key=roundAPI,value={{?{API Command|}}} --show,turnorder'))
         listItems.push(makeTextButton('Roll20AM',turnorder.roundRoll20AM, '!cmaster --config,turnorder,key=roundRoll20AM,value={{?{Roll20AM Command|}}} --show,turnorder'))
@@ -1432,9 +1437,12 @@ var CombatMaster = CombatMaster || (function() {
   
     addTargetsToCondition = function(selectedTokens,id,key) {
         if (debug) {
-            log("Add Targets to Condition")
+            log("Add Targets to Condition");
         }
-        
+        if (!selectedTokens || selectedTokens.length == 0) {
+            makeAndSendMenu('No tokens selected.  Condition not added',' ', whisper);
+            return;
+        }
         [...state[combatState].conditions].forEach((condition,i) => {
             if (condition.id == id && condition.key == key) {
                 selectedTokens.forEach(token => {
@@ -1444,7 +1452,6 @@ var CombatMaster = CombatMaster || (function() {
                 })    
             }   
         });   
-        
         makeAndSendMenu('Selected Tokens Added',"Selected Tokens",'gm'); 
     },
     
@@ -1834,6 +1841,8 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         if(!next) checkMarkerturn(marker);
+
+        
         
         toBack(marker);
 
@@ -1859,7 +1868,7 @@ var CombatMaster = CombatMaster || (function() {
     },
     
     removeMarkers = function () {
-        stopRotate();
+        stopMarkerAnimation();
         getOrCreateMarker().remove();
         getOrCreateMarker(true).remove();
     },
@@ -1875,12 +1884,11 @@ var CombatMaster = CombatMaster || (function() {
             resetMarker(next);
             return;
         }
-
         let position = {
             top: token.get('top'),
             left: token.get('left'),
-            width: token.get('width')+(token.get('width')*0.35),
-            height: token.get('height')+(token.get('height')*0.35),
+            width: token.get('width')*state[combatState].config.turnorder.markerSize,
+            height: token.get('height')*state[combatState].config.turnorder.markerSize,
         };
 
         if(token.get('layer') !== marker.get('layer')) {
@@ -1946,7 +1954,25 @@ var CombatMaster = CombatMaster || (function() {
                 }    
             }
         }
-    },    
+    },   
+	
+    startMarkerAnimation = function(marker) {
+        if(state[combatState].config.turnorder.animateMarker) {
+            clearInterval(animationHandle)
+            animateMarker(marker)              
+        }                    
+    },
+	
+    stopMarkerAnimation = function() {
+        clearInterval(animationHandle)
+    },  
+	
+    animateMarker = function(marker) {
+		animationHandle = setInterval(() => {
+		   	marker.set('rotation',parseInt(marker.get('rotation'))+state[combatState].config.turnorder.animateMarkerDegree);
+		}, state[combatState].config.turnorder.animateMarkerWait);
+    },
+     
 //*************************************************************************************************************
 //TURNORDER
 //*************************************************************************************************************	      
@@ -1963,8 +1989,10 @@ var CombatMaster = CombatMaster || (function() {
 
         if (turnorder.length == 0) {
             makeAndSendMenu('The Turnorder is empty.  Combat not started',null,'gm');
+            stopCombat()
             return false
         }
+        
         return true
     },
     
@@ -1981,7 +2009,6 @@ var CombatMaster = CombatMaster || (function() {
         let marker      = getOrCreateMarker()
         let tokenObj    = findObjs({_id:turn.id, _pageid:Campaign().get("playerpageid"), _type: 'graphic'})[0];
 
-        
         if (turn.id === '-1') { 
             doRoundCalls()
             nextTurn();
@@ -2007,6 +2034,7 @@ var CombatMaster = CombatMaster || (function() {
             changeMarker(tokenObj);
             announcePlayer(tokenObj, prev, delay);
             centerToken(tokenObj);
+			startMarkerAnimation(marker);
             setTimeout(function() {
                  doTurnCalls(tokenObj) 
             },1000)             
@@ -3093,25 +3121,16 @@ var CombatMaster = CombatMaster || (function() {
         return (str.length > max) ? str.slice(0, max) + '...' : str;
     },
 
-
-    stopRotate = function () {
-        clearInterval(rotationInterval);
-    },
-
     randomBetween = function (min, max) {
         return Math.floor(Math.random()*(max-min+1)+min);
     },
 
     handeIniativePageChange = function (obj,prev) {
         if((obj.get('initiativepage') !== prev.initiativepage && !obj.get('initiativepage'))){
-            stopCombat();
+            //stopCombat();
         }
     },
 
-    handlePlayerPageChange = function (obj,prev) {
-
-    },
-    
     observeTokenChange = function(handler){
         if(handler && _.isFunction(handler)){
             observers.tokenChange.push(handler);
@@ -3261,6 +3280,10 @@ var CombatMaster = CombatMaster || (function() {
 					tokenMarkerURL: null,
 					nextTokenMarkerName: 'None',
 					nextTokenMarkerURL: null,
+					markerSize: 1.35,
+					animateMarker: true,
+					animateMarkerDegree: 15,
+					animateMarkerWait: 250,
 	                sortTurnOrder: true,
 					centerToken: true,	
 					turnAPI: 'None',
@@ -3275,7 +3298,7 @@ var CombatMaster = CombatMaster || (function() {
 					allRoundMacro: 'None',					
                 },
                 timer: {
-                    useTimer: false,
+                    useTimer: true,
                     time: 120,
                     skipTurn: true,
                     sendTimerToChat: true,
@@ -3799,6 +3822,18 @@ var CombatMaster = CombatMaster || (function() {
 				}	
 				if(!state[combatState].config.turnorder.hasOwnProperty('nextTokenMarkerURL')){
 					state[combatState].config.turnorder.nextTokenMarkerURL = combatDefaults.config.turnorder.nextTokenMarkerURL;
+				}				
+				if(!state[combatState].config.turnorder.hasOwnProperty('markerSize')){
+					state[combatState].config.turnorder.markerSize = combatDefaults.config.turnorder.markerSize;
+				}				
+				if(!state[combatState].config.turnorder.hasOwnProperty('animateMarker')){
+					state[combatState].config.turnorder.animateMarker = combatDefaults.config.turnorder.animateMarker;
+				}
+				if(!state[combatState].config.turnorder.hasOwnProperty('animateMarkerDegree')){
+					state[combatState].config.turnorder.animateMarkerDegree = combatDefaults.config.turnorder.animateMarkerDegree;
+				}
+				if(!state[combatState].config.turnorder.hasOwnProperty('animateMarkerWait')){
+					state[combatState].config.turnorder.animateMarkerWait = combatDefaults.config.turnorder.animateMarkerWait;
 				}				
 				if(!state[combatState].config.turnorder.hasOwnProperty('centerToken')){
 					state[combatState].config.turnorder.centerToken = combatDefaults.config.turnorder.centerToken;
@@ -4510,7 +4545,6 @@ var CombatMaster = CombatMaster || (function() {
         on('change:campaign:turnorder', handleTurnorderChange);
         on('change:graphic:statusmarkers', handleStatusMarkerChange);
         on('change:campaign:initiativepage', handeIniativePageChange);
-        on('change:campaign:playerpageid', handlePlayerPageChange);
         on('change:graphic:top', handleGraphicMovement);
         on('change:graphic:left', handleGraphicMovement);
         on('change:graphic:layer', handleGraphicMovement);
@@ -4541,7 +4575,7 @@ var CombatMaster = CombatMaster || (function() {
         ObserveTokenChange: observeTokenChange,
         addConditionToToken,
         removeConditionFromToken,
-	    addTargetsToCondition,
+	addTargetsToCondition,
         getConditions,
         getConditionByKey,
         sendConditionToChat,
