@@ -1565,6 +1565,7 @@ var CombatMaster = CombatMaster || (function() {
         
         removeMarkers();
         stopTimer();
+        stopMarkerAnimation();
         Campaign().set({initiativepage:false,turnorder:''});     
         round = 1;
         
