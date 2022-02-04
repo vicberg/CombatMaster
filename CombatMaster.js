@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.45',
+	    version = '2.46',
         timerObj,
         intervalHandle,
         animationHandle,
@@ -1657,9 +1657,9 @@ var CombatMaster = CombatMaster || (function() {
                         }  
                         //add to turnorder 
                         if (Number.isInteger(initiativeMod+initiativeRoll)) {
-                            addToTurnorder({id:tokenObj.id,pr:(initiativeMod+initiativeRoll),custom:'',pageid:tokenObj.get("pageid")});
+                            addToTurnorder({id:tokenObj.id,pr:(initiativeMod+initiativeRoll),custom:'',_pageid:tokenObj.get("pageid")});
                         } else {
-                            addToTurnorder({id:tokenObj.id,pr:(initiativeMod+initiativeRoll).toFixed(2),custom:'',pageid:tokenObj.get("pageid")});
+                            addToTurnorder({id:tokenObj.id,pr:(initiativeMod+initiativeRoll).toFixed(2),custom:'',_pageid:tokenObj.get("pageid")});
                         }    
                     }   
                 }    
