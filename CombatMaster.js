@@ -1,5 +1,5 @@
 /* 
- * Version 2.45
+ * Version 2.47
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.46',
+	    version = '2.47',
         timerObj,
         intervalHandle,
         animationHandle,
@@ -2031,11 +2031,15 @@ var CombatMaster = CombatMaster || (function() {
             if (state[combatState].config.timer.useTimer) {
                 startTimer(tokenObj);
             }
-
+         
             changeMarker(tokenObj);
             announcePlayer(tokenObj, prev, delay);
             centerToken(tokenObj);
-			startMarkerAnimation(marker);
+			if (state[combatState].config.turnorder.animateMarker) {
+                startMarkerAnimation(marker);
+            } else {
+                stopMarkerAnimation(marker);
+            } 
             setTimeout(function() {
                  doTurnCalls(tokenObj) 
             },1000)             
@@ -3282,7 +3286,7 @@ var CombatMaster = CombatMaster || (function() {
 					nextTokenMarkerName: 'None',
 					nextTokenMarkerURL: null,
 					markerSize: 1.35,
-					animateMarker: true,
+					animateMarker: false,
 					animateMarkerDegree: 15,
 					animateMarkerWait: 250,
 	                sortTurnOrder: true,
@@ -3299,7 +3303,7 @@ var CombatMaster = CombatMaster || (function() {
 					allRoundMacro: 'None',					
                 },
                 timer: {
-                    useTimer: true,
+                    useTimer: false,
                     time: 120,
                     skipTurn: true,
                     sendTimerToChat: true,
