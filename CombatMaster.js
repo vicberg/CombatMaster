@@ -1,5 +1,5 @@
 /* 
- * Version 2.47
+ * Version 2.48
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.47',
+	    version = '2.48',
         timerObj,
         intervalHandle,
         animationHandle,
@@ -1842,8 +1842,6 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         if(!next) checkMarkerturn(marker);
-
-        
         
         toBack(marker);
 
@@ -1863,7 +1861,7 @@ var CombatMaster = CombatMaster || (function() {
         });
 
         if(!hasTurn){
-            turnorder.push({ id: marker.get('id'), pr: -1, custom: '', pageid: marker.get('pageid') });
+            turnorder.push({ id: marker.get('id'), pr: -1, custom: '', _pageid: marker.get('pageid') });
             Campaign().set('turnorder', JSON.stringify(turnorder));
         }
     },
